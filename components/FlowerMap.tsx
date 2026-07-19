@@ -93,6 +93,43 @@ export default function FlowerMap() {
     }
   }, [reports, season]);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const myMarkerRef = useRef<any>(null);
+  const [locating, setLocating] = useState(false);
+
+  function goToMyLocation() {
+    if (!navigator.geolocation) {
+      alert("이 브라우저는 위치 기능을 지원하지 않아요");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setLocating(false);
+        const pos = new naver.maps.LatLng(p.coords.latitude, p.coords.longitude);
+        if (!myMarkerRef.current) {
+          myMarkerRef.current = new naver.maps.Marker({
+            map: mapRef.current,
+            position: pos,
+            icon: {
+              content:
+                '<div style="width:16px;height:16px;border-radius:50%;background:#4285f4;border:3px solid #fff;box-shadow:0 0 8px rgba(66,133,244,.6)"></div>',
+              anchor: new naver.maps.Point(8, 8),
+            },
+          });
+        } else {
+          myMarkerRef.current.setPosition(pos);
+        }
+        mapRef.current?.morph(pos, 15);
+      },
+      () => {
+        setLocating(false);
+        alert("위치를 가져오지 못했어요. 브라우저 위치 권한을 확인해주세요.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
+
   function showOnMap(r: Report) {
     setTab("map");
     setSelected(r);
@@ -109,6 +146,17 @@ export default function FlowerMap() {
             ? `${season.emoji} 지금은 ${season.flower_name} 시즌!`
             : "시즌 정보를 불러오는 중…"}
         </div>
+      )}
+
+      {tab === "map" && (
+        <button
+          className="locate-btn"
+          onClick={goToMyLocation}
+          disabled={locating}
+          aria-label="내 위치로 이동"
+        >
+          {locating ? "⏳" : "🧭"}
+        </button>
       )}
 
       {picking && (
