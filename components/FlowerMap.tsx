@@ -2,8 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { supabase, type Report, type Season } from "@/lib/supabase";
+import { addMyReportId } from "@/lib/myReports";
 import ReportModal from "./ReportModal";
 import ReportPopup from "./ReportPopup";
+import BottomBar, { type Tab } from "./BottomBar";
+import InfoTab from "./InfoTab";
+import MyPage from "./MyPage";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,10 +21,12 @@ export default function FlowerMap() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const markersRef = useRef<Map<number, any>>(new Map());
 
+  const [tab, setTab] = useState<Tab>("map");
   const [season, setSeason] = useState<Season | null>(null);
   const [reports, setReports] = useState<Report[]>([]);
   const [picking, setPicking] = useState(false);
   const pickingRef = useRef(false);
+  const [reporting, setReporting] = useState(false);
   const [draftPos, setDraftPos] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Report | null>(null);
 
@@ -40,6 +46,7 @@ export default function FlowerMap() {
       if (pickingRef.current) {
         setDraftPos({ lat: e.coord.y, lng: e.coord.x });
         setPicking(false);
+        setReporting(true);
       } else {
         setSelected(null);
       }
@@ -86,33 +93,52 @@ export default function FlowerMap() {
     }
   }, [reports, season]);
 
+  function showOnMap(r: Report) {
+    setTab("map");
+    setSelected(r);
+    mapRef.current?.morph(new naver.maps.LatLng(r.lat, r.lng), 15);
+  }
+
   return (
     <>
       <div ref={mapDivRef} style={{ width: "100vw", height: "100vh" }} />
 
-      <div className="season-banner">
-        {season
-          ? `${season.emoji} 지금은 ${season.flower_name} 시즌!`
-          : "시즌 정보를 불러오는 중…"}
-      </div>
+      {tab === "map" && (
+        <div className="season-banner">
+          {season
+            ? `${season.emoji} 지금은 ${season.flower_name} 시즌!`
+            : "시즌 정보를 불러오는 중…"}
+        </div>
+      )}
 
-      {season && (
-        <button
-          className={`report-fab${picking ? " picking" : ""}`}
-          onClick={() => setPicking((p) => !p)}
-        >
-          {picking ? "지도를 눌러 위치를 골라주세요 (취소)" : `📍 ${season.flower_name} 제보하기`}
+      {picking && (
+        <button className="report-fab picking" onClick={() => setPicking(false)}>
+          지도를 눌러 위치를 골라주세요 (취소)
         </button>
       )}
 
-      {draftPos && season && (
+      {tab === "info" && <InfoTab />}
+      {tab === "my" && <MyPage onShowOnMap={showOnMap} />}
+
+      {reporting && season && (
         <ReportModal
           season={season}
           pos={draftPos}
-          onClose={() => setDraftPos(null)}
-          onCreated={(r) => {
-            setReports((prev) => [r, ...prev]);
+          onPickOnMap={() => {
+            setReporting(false);
+            setTab("map");
+            setPicking(true);
+          }}
+          onClose={() => {
+            setReporting(false);
             setDraftPos(null);
+          }}
+          onCreated={(r) => {
+            addMyReportId(r.id);
+            setReports((prev) => [r, ...prev]);
+            setReporting(false);
+            setDraftPos(null);
+            showOnMap(r);
           }}
         />
       )}
@@ -120,6 +146,18 @@ export default function FlowerMap() {
       {selected && (
         <ReportPopup report={selected} onClose={() => setSelected(null)} />
       )}
+
+      <BottomBar
+        tab={tab}
+        onTab={(t) => {
+          setTab(t);
+          setPicking(false);
+        }}
+        onReport={() => {
+          setDraftPos(null);
+          setReporting(true);
+        }}
+      />
     </>
   );
 }
