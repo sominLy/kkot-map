@@ -22,6 +22,8 @@ export type Report = {
   bloom_state: "full" | "blooming" | "faded";
   fresh_votes: number;
   faded_votes: number;
+  likes: number;
+  visits: number;
   hidden: boolean;
   created_at: string;
 };

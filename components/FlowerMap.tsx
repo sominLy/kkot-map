@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase, type Report, type Season } from "@/lib/supabase";
 import { addMyReportId } from "@/lib/myReports";
+import { bumpStat, collectFlower } from "@/lib/game";
+import CardModal from "./CardModal";
 import ReportModal from "./ReportModal";
 import ReportPopup from "./ReportPopup";
 import BottomBar, { type Tab } from "./BottomBar";
 import InfoTab from "./InfoTab";
 import MyPage from "./MyPage";
+import RankingTab from "./RankingTab";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +32,7 @@ export default function FlowerMap() {
   const [reporting, setReporting] = useState(false);
   const [draftPos, setDraftPos] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Report | null>(null);
+  const [earnedCard, setEarnedCard] = useState<{ isNew: boolean; place?: string } | null>(null);
 
   useEffect(() => {
     pickingRef.current = picking;
@@ -166,6 +170,14 @@ export default function FlowerMap() {
       )}
 
       {tab === "info" && <InfoTab />}
+      {tab === "rank" && (
+        <RankingTab
+          onShowOnMap={(lat, lng) => {
+            setTab("map");
+            mapRef.current?.morph(new naver.maps.LatLng(lat, lng), 14);
+          }}
+        />
+      )}
       {tab === "my" && <MyPage onShowOnMap={showOnMap} />}
 
       {reporting && season && (
@@ -183,16 +195,36 @@ export default function FlowerMap() {
           }}
           onCreated={(r) => {
             addMyReportId(r.id);
+            bumpStat("reports");
+            const isNew = collectFlower(season.flower_name, season.emoji);
             setReports((prev) => [r, ...prev]);
             setReporting(false);
             setDraftPos(null);
             showOnMap(r);
+            setEarnedCard({ isNew, place: r.memo || undefined });
           }}
         />
       )}
 
       {selected && (
-        <ReportPopup report={selected} onClose={() => setSelected(null)} />
+        <ReportPopup
+          report={selected}
+          season={season}
+          onClose={() => setSelected(null)}
+          onEarnCard={(isNew) =>
+            setEarnedCard({ isNew, place: selected.memo || undefined })
+          }
+        />
+      )}
+
+      {earnedCard && season && (
+        <CardModal
+          flower={season.flower_name}
+          emoji={season.emoji}
+          place={earnedCard.place}
+          isNew={earnedCard.isNew}
+          onClose={() => setEarnedCard(null)}
+        />
       )}
 
       <BottomBar

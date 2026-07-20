@@ -1,6 +1,6 @@
 "use client";
 
-export type Tab = "map" | "info" | "my";
+export type Tab = "map" | "info" | "rank" | "my";
 
 export default function BottomBar({
   tab,
@@ -21,6 +21,9 @@ export default function BottomBar({
       </button>
       <button className="report-tab" onClick={onReport}>
         📍<span>제보하기</span>
+      </button>
+      <button className={tab === "rank" ? "on" : ""} onClick={() => onTab("rank")}>
+        🏆<span>랭킹</span>
       </button>
       <button className={tab === "my" ? "on" : ""} onClick={() => onTab("my")}>
         🙋<span>마이</span>
