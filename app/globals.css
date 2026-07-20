@@ -403,6 +403,14 @@ button {
   font-size: 11px;
 }
 
+.source-link {
+  display: inline-block;
+  font-size: 12px;
+  color: #4a7dff;
+  text-decoration: none;
+  margin: 4px 0;
+}
+
 .visit-btn {
   border: 1px solid #cde8d2;
   background: #f2fbf4;

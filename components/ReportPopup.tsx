@@ -60,6 +60,16 @@ export default function ReportPopup({
             <img src={report.photo_url} alt="제보 사진" />
           )}
           {report.memo && <p>{report.memo}</p>}
+          {report.source_url && (
+            <a
+              className="source-link"
+              href={report.source_url}
+              target="_blank"
+              rel="noreferrer noopener"
+            >
+              🔗 소개 콘텐츠 보기
+            </a>
+          )}
           <button className={`like-btn${liked ? " on" : ""}`} onClick={like}>
             {liked ? "❤️" : "🤍"} 좋아요 {(report.likes ?? 0) + (liked && !initialLiked ? 1 : 0)}
           </button>

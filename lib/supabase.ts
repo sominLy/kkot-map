@@ -24,6 +24,7 @@ export type Report = {
   faded_votes: number;
   likes: number;
   visits: number;
+  source_url: string | null;
   hidden: boolean;
   created_at: string;
 };
