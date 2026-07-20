@@ -11,6 +11,7 @@ import BottomBar, { type Tab } from "./BottomBar";
 import InfoTab from "./InfoTab";
 import MyPage from "./MyPage";
 import RankingTab from "./RankingTab";
+import RainOverlay from "./RainOverlay";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -143,6 +144,8 @@ export default function FlowerMap() {
   return (
     <>
       <div ref={mapDivRef} style={{ width: "100vw", height: "100vh" }} />
+
+      {tab === "map" && <RainOverlay lat={37.5665} lng={126.978} />}
 
       {tab === "map" && (
         <div className="season-banner">
