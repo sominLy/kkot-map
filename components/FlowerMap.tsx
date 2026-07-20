@@ -26,14 +26,22 @@ export default function FlowerMap() {
   const markersRef = useRef<Map<number, any>>(new Map());
 
   const [tab, setTab] = useState<Tab>("map");
-  const [season, setSeason] = useState<Season | null>(null);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [activeSeason, setActiveSeason] = useState<Season | null>(null);
+  const [viewSeason, setViewSeason] = useState<Season | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [reports, setReports] = useState<Report[]>([]);
   const [picking, setPicking] = useState(false);
   const pickingRef = useRef(false);
   const [reporting, setReporting] = useState(false);
   const [draftPos, setDraftPos] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Report | null>(null);
-  const [earnedCard, setEarnedCard] = useState<{ isNew: boolean; place?: string } | null>(null);
+  const [earnedCard, setEarnedCard] = useState<{
+    flower: string;
+    emoji: string;
+    isNew: boolean;
+    place?: string;
+  } | null>(null);
 
   useEffect(() => {
     pickingRef.current = picking;
@@ -58,29 +66,37 @@ export default function FlowerMap() {
     });
 
     (async () => {
-      const { data: s } = await supabase
-        .from("seasons")
-        .select("*")
-        .eq("is_active", true)
-        .limit(1)
-        .single();
-      if (!s) return;
-      setSeason(s);
-      const { data: r } = await supabase
+      const { data } = await supabase.from("seasons").select("*").order("id");
+      if (!data || data.length === 0) return;
+      setSeasons(data);
+      const active = data.find((s: Season) => s.is_active) ?? data[0];
+      setActiveSeason(active);
+      setViewSeason(active);
+    })();
+  }, []);
+
+  // 보고 있는 시즌이 바뀌면 제보를 다시 불러오고 마커를 교체
+  useEffect(() => {
+    if (!viewSeason) return;
+    (async () => {
+      const { data } = await supabase
         .from("reports")
         .select("*")
-        .eq("season_id", s.id)
+        .eq("season_id", viewSeason.id)
         .eq("hidden", false)
         .order("created_at", { ascending: false })
         .limit(500);
-      setReports(r ?? []);
+      for (const marker of markersRef.current.values()) marker.setMap(null);
+      markersRef.current.clear();
+      setSelected(null);
+      setReports(data ?? []);
     })();
-  }, []);
+  }, [viewSeason]);
 
   // 제보 목록이 바뀌면 마커 동기화
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !season) return;
+    if (!map || !viewSeason) return;
     for (const report of reports) {
       if (markersRef.current.has(report.id)) continue;
       const marker = new naver.maps.Marker({
@@ -89,14 +105,14 @@ export default function FlowerMap() {
         icon: {
           content: `<div style="font-size:26px;filter:${
             report.bloom_state === "faded" ? "grayscale(1)" : "none"
-          }">${season.emoji}</div>`,
+          }">${viewSeason.emoji}</div>`,
           anchor: new naver.maps.Point(13, 13),
         },
       });
       naver.maps.Event.addListener(marker, "click", () => setSelected(report));
       markersRef.current.set(report.id, marker);
     }
-  }, [reports, season]);
+  }, [reports, viewSeason]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myMarkerRef = useRef<any>(null);
@@ -141,6 +157,8 @@ export default function FlowerMap() {
     mapRef.current?.morph(new naver.maps.LatLng(r.lat, r.lng), 15);
   }
 
+  const isViewingActive = viewSeason?.id === activeSeason?.id;
+
   return (
     <>
       <div ref={mapDivRef} style={{ width: "100vw", height: "100vh" }} />
@@ -148,10 +166,42 @@ export default function FlowerMap() {
       {tab === "map" && <RainOverlay lat={37.5665} lng={126.978} />}
 
       {tab === "map" && (
-        <div className="season-banner">
-          {season
-            ? `${season.emoji} 지금은 ${season.flower_name} 시즌!`
+        <button className="season-banner" onClick={() => setPickerOpen(true)}>
+          {viewSeason
+            ? isViewingActive
+              ? `${viewSeason.emoji} 지금은 ${viewSeason.flower_name} 시즌!`
+              : `${viewSeason.emoji} ${viewSeason.flower_name} 명소 구경 중`
             : "시즌 정보를 불러오는 중…"}
+          <span className="season-caret">▾</span>
+        </button>
+      )}
+
+      {pickerOpen && (
+        <div className="modal-backdrop" onClick={() => setPickerOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <h2>어떤 꽃을 구경할까요?</h2>
+            <div className="season-grid">
+              {seasons.map((s) => (
+                <button
+                  key={s.id}
+                  className={`season-chip${viewSeason?.id === s.id ? " on" : ""}`}
+                  onClick={() => {
+                    setViewSeason(s);
+                    setPickerOpen(false);
+                    setTab("map");
+                  }}
+                >
+                  <span>{s.emoji}</span>
+                  {s.flower_name}
+                  {s.is_active && <em>NOW</em>}
+                </button>
+              ))}
+            </div>
+            <p className="privacy-note">
+              제보는 지금 시즌({activeSeason?.emoji} {activeSeason?.flower_name})
+              꽃만 가능해요. 다른 꽃은 명소 구경용이에요 🌸
+            </p>
+          </div>
         </div>
       )}
 
@@ -183,13 +233,14 @@ export default function FlowerMap() {
       )}
       {tab === "my" && <MyPage onShowOnMap={showOnMap} />}
 
-      {reporting && season && (
+      {reporting && activeSeason && (
         <ReportModal
-          season={season}
+          season={activeSeason}
           pos={draftPos}
           onPickOnMap={() => {
             setReporting(false);
             setTab("map");
+            setViewSeason(activeSeason);
             setPicking(true);
           }}
           onClose={() => {
@@ -199,31 +250,42 @@ export default function FlowerMap() {
           onCreated={(r) => {
             addMyReportId(r.id);
             bumpStat("reports");
-            const isNew = collectFlower(season.flower_name, season.emoji);
+            const isNew = collectFlower(activeSeason.flower_name, activeSeason.emoji);
+            setViewSeason(activeSeason);
             setReports((prev) => [r, ...prev]);
             setReporting(false);
             setDraftPos(null);
             showOnMap(r);
-            setEarnedCard({ isNew, place: r.memo || undefined });
+            setEarnedCard({
+              flower: activeSeason.flower_name,
+              emoji: activeSeason.emoji,
+              isNew,
+              place: r.memo || undefined,
+            });
           }}
         />
       )}
 
-      {selected && (
+      {selected && viewSeason && (
         <ReportPopup
           report={selected}
-          season={season}
+          season={viewSeason}
           onClose={() => setSelected(null)}
           onEarnCard={(isNew) =>
-            setEarnedCard({ isNew, place: selected.memo || undefined })
+            setEarnedCard({
+              flower: viewSeason.flower_name,
+              emoji: viewSeason.emoji,
+              isNew,
+              place: selected.memo || undefined,
+            })
           }
         />
       )}
 
-      {earnedCard && season && (
+      {earnedCard && (
         <CardModal
-          flower={season.flower_name}
-          emoji={season.emoji}
+          flower={earnedCard.flower}
+          emoji={earnedCard.emoji}
           place={earnedCard.place}
           isNew={earnedCard.isNew}
           onClose={() => setEarnedCard(null)}

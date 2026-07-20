@@ -79,6 +79,63 @@ a:focus-visible {
   letter-spacing: -0.01em;
   box-shadow: var(--shadow-md);
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.season-caret {
+  font-size: 11px;
+  color: var(--ink-soft);
+}
+
+/* ─── 시즌(꽃) 선택 그리드 ─── */
+.season-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  max-height: 52vh;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.season-chip {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  border: 1.5px solid var(--line);
+  background: #fff;
+  border-radius: 14px;
+  padding: 12px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.season-chip span {
+  font-size: 26px;
+}
+
+.season-chip.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+.season-chip em {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  font-style: normal;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  background: var(--leaf);
+  color: #fff;
+  border-radius: 999px;
+  padding: 2px 5px;
 }
 
 /* ─── 제보 플로팅 버튼 ─── */
