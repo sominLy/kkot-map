@@ -1,34 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { FLOWER_SEASONS, getCurrentTerm, type SolarTerm } from "@/lib/content";
+import { useState } from "react";
+import { FLOWER_SEASONS, getCurrentTerm } from "@/lib/content";
 
 export default function InfoTab() {
-  const [term, setTerm] = useState<{ current: SolarTerm; next: SolarTerm } | null>(null);
-
-  useEffect(() => {
-    setTerm(getCurrentTerm());
-  }, []);
+  // useState 초기화 함수로 첫 렌더부터 값이 채워지도록 (null 깜빡임 없음)
+  const [{ current, next }] = useState(getCurrentTerm);
 
   return (
     <div className="sheet">
       <div className="term-card">
         <p className="term-label">지금 절기는</p>
-        <h2 className="term-name">{term ? term.current.name : "…"}</h2>
-        <p className="term-desc">{term?.current.desc ?? "절기를 불러오는 중이에요"}</p>
+        <h2 className="term-name">{current.name}</h2>
+        <p className="term-desc">{current.desc}</p>
         <div className="term-foods">
           <span className="foods-label">🍽️ 요즘 제철</span>
-          {term?.current.foods.map((f) => (
+          {current.foods.map((f) => (
             <span key={f} className="food-chip">
               {f}
             </span>
           ))}
         </div>
-        {term && (
-          <p className="term-next">
-            다음 절기는 {term.next.month}월 {term.next.day}일쯤 「{term.next.name}」
-          </p>
-        )}
+        <p className="term-next">
+          다음 절기는 {next.month}월 {next.day}일쯤 「{next.name}」
+        </p>
       </div>
 
       <h3 className="section-title">🗓️ 시즌별 꽃 도감</h3>
