@@ -1822,3 +1822,182 @@ label:focus-within {
     padding-left: 18px;
   }
 }
+
+/* ─── 시즌 이벤트 캘린더 ─── */
+.event-strip {
+  display: flex;
+  gap: 10px;
+  margin: 0 -18px;
+  padding: 2px 18px 6px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 18px;
+  scrollbar-width: none;
+}
+
+.event-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.event-card {
+  flex: 0 0 200px;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 16px;
+  border-radius: var(--r-lg);
+  background: var(--card);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  color: var(--ink);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s ease;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.event-card.live {
+  background:
+    radial-gradient(90% 80% at 100% 0%, var(--glow), transparent 70%),
+    linear-gradient(160deg, #fffaf3, var(--accent-soft));
+  border-color: rgba(255, 255, 255, 0.9);
+}
+
+.event-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.event-card b {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.35;
+  letter-spacing: -0.03em;
+}
+
+.event-when {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+.event-where,
+.event-prev {
+  font-size: 12px;
+  color: var(--ink-soft);
+}
+
+.event-prev {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--line-2);
+  color: var(--ink-faint);
+}
+
+.event-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.event-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--ink-soft);
+}
+
+.event-badge.live {
+  background: var(--accent);
+  color: #fff;
+}
+
+.event-badge.soon {
+  background: var(--ink);
+  color: #fff;
+}
+
+.segmented.years {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.event-list {
+  padding: 4px 0;
+}
+
+.month-group + .month-group {
+  border-top: 1px solid var(--line);
+}
+
+.month-label {
+  padding: 14px 18px 4px;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--accent-deep);
+}
+
+.event-list ul {
+  list-style: none;
+}
+
+.event-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 18px 12px;
+}
+
+.event-list li.done {
+  opacity: 0.6;
+}
+
+.event-list .event-emoji {
+  font-size: 22px;
+  margin-top: 2px;
+}
+
+.event-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.kind {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  color: var(--ink-soft);
+}
+
+.kind.booking {
+  background: #eaf0ff;
+  color: #3d5bc4;
+}
+
+.kind.open {
+  background: #fbf2dc;
+  color: #8a6310;
+}
+
+.event-list .row-body a {
+  font-size: 11.5px;
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line-2);
+  align-self: flex-start;
+}

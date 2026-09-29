@@ -24,6 +24,7 @@
    3. `supabase/instagram-links.sql` (인스타 출처 링크)
    4. `supabase/autumn-2026.sql` (단풍 시즌 전환 + 인스타 단풍 명소)
 3. `.env.local`에 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 채우기
+   - Vercel에서는 Production뿐 아니라 **Preview**에도 같은 변수를 넣어야 브랜치 미리보기에서 데이터가 보여요. 없으면 화면만 뜨고 제보는 비어 보입니다.
 4. 실행:
 
 ```bash
@@ -55,3 +56,4 @@ node seed/instagram-autumn.mjs   # → supabase/autumn-2026.sql
 
 - **24절기** (`lib/content.ts`): 절기마다 한자·이름 풀이·제철 음식·해보면 좋은 일·속담. 음식·할 일·속담은 2024년 이후 게시된 자료에서만 모았고 절기마다 출처 링크가 있습니다.
 - **2026 단풍 달력**: 산림청 단풍절정 예측지도(9/22 발표), 기상청 첫 단풍 관측.
+- **시즌 이벤트 캘린더** (`lib/events.ts`): 2024년 1월부터의 예약 오픈(화담숲 등)·꽃 축제·한정 개방 일정. 이벤트마다 출처 링크가 있고, 작년 일정과 비교해 볼 수 있어요.

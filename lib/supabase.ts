@@ -1,9 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export const supabase = createClient(url, anonKey);
+if (!url || !anonKey) {
+  console.warn(
+    "[꽃맵] NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY가 없어요. 데이터 없이 화면만 뜹니다."
+  );
+}
+
+// 환경변수가 없는 배포(예: Vercel Preview)에서도 빌드가 깨지지 않도록 자리표시 값으로 만든다.
+// 이 경우 요청은 실패하고 지도에는 제보가 비어 보인다.
+export const supabase = createClient(
+  url || "https://placeholder.supabase.co",
+  anonKey || "placeholder-anon-key"
+);
 
 export type Season = {
   id: number;
