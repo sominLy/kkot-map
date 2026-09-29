@@ -116,9 +116,12 @@ label:focus-within {
 }
 
 /* ─── 지도 위 크롬 ─── */
+/* 네이버 지도가 컨테이너 position을 relative로 덮어쓰므로 크기는 인라인으로 지정한다 */
 .map {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100dvh;
 }
 
 .topbar {
