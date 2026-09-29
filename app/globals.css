@@ -1,6 +1,6 @@
 /* ─────────────────────────────────────────
    꽃맵 디자인 시스템 — "Seasonal Editorial"
-   아이보리 종이 바탕 · 세리프 헤드라인 · 시즌 컬러가 번지는 빛
+   아이보리 종이 바탕 · 프리텐다드 헤드라인 · 시즌 컬러가 번지는 빛
    (--accent 계열은 lib/theme.ts가 보고 있는 시즌에 맞춰 바꾼다)
    ───────────────────────────────────────── */
 :root {
@@ -25,7 +25,7 @@
   --glass: rgba(255, 253, 249, 0.78);
   --glass-line: rgba(255, 255, 255, 0.75);
 
-  --serif: "Noto Serif KR", "Nanum Myeongjo", "AppleMyungjo", serif;
+  --display: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
   --sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", system-ui, sans-serif;
 
   --shadow-xs: 0 1px 2px rgba(42, 33, 27, 0.06);
@@ -93,8 +93,8 @@ label:focus-within {
   outline-offset: 2px;
 }
 
-.serif {
-  font-family: var(--serif);
+.display {
+  font-family: var(--display);
   letter-spacing: -0.02em;
 }
 
@@ -177,7 +177,7 @@ label:focus-within {
 }
 
 .season-text strong {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 17px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -516,9 +516,9 @@ label:focus-within {
 }
 
 .page-head h1 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 30px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.2;
 }
@@ -538,7 +538,7 @@ label:focus-within {
 }
 
 .section-title h2 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 19px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -584,9 +584,9 @@ label:focus-within {
 }
 
 .hero-title {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 34px;
-  font-weight: 700;
+  font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1.15;
 }
@@ -694,7 +694,7 @@ label:focus-within {
 }
 
 .tl-date {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-weight: 700;
   font-size: 15px;
   letter-spacing: -0.02em;
@@ -759,7 +759,7 @@ label:focus-within {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 14px;
   font-weight: 700;
   color: var(--ink-2);
@@ -830,7 +830,7 @@ label:focus-within {
   width: 26px;
   flex-shrink: 0;
   text-align: center;
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 22px;
   font-weight: 700;
   color: var(--ink-faint);
@@ -989,7 +989,7 @@ label:focus-within {
 }
 
 .stat b {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 22px;
   font-weight: 700;
 }
@@ -1121,7 +1121,7 @@ label:focus-within {
 }
 
 .sheet-head h2 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1561,7 +1561,7 @@ label:focus-within {
 }
 
 .card-earned h2 {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 22px;
 }
 
@@ -1633,7 +1633,7 @@ label:focus-within {
 }
 
 .flower-card-name {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.03em;
@@ -1652,7 +1652,7 @@ label:focus-within {
 
 /* ─── 24절기 ─── */
 .hanja {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 0.55em;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -1719,7 +1719,7 @@ label:focus-within {
 }
 
 .saying {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 15px;
   line-height: 1.6;
   color: var(--ink);
@@ -1875,7 +1875,7 @@ label:focus-within {
 }
 
 .event-card b {
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 16px;
   line-height: 1.35;
   letter-spacing: -0.03em;
@@ -1939,7 +1939,7 @@ label:focus-within {
 
 .month-label {
   padding: 14px 18px 4px;
-  font-family: var(--serif);
+  font-family: var(--display);
   font-size: 15px;
   font-weight: 700;
   color: var(--accent-deep);
