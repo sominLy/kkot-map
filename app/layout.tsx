@@ -1,10 +1,33 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
+import { SITE_DESC, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "꽃맵 — 지금 어디에 꽃이 피었나요",
-  description: "사용자 제보로 만드는 시즌 꽃·단풍 지도",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: "꽃맵 — 전국 꽃·단풍 명소 지도 | 2026 단풍 시기",
+    template: "%s | 꽃맵",
+  },
+  description: SITE_DESC,
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_NAME,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    siteName: SITE_NAME,
+    url: "/",
+    title: "꽃맵 — 지금 어디에 꽃이 피었나요",
+    description: SITE_DESC,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "꽃맵 — 지금 어디에 꽃이 피었나요",
+    description: SITE_DESC,
+  },
+  robots: { index: true, follow: true },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
