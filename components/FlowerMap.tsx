@@ -169,7 +169,7 @@ export default function FlowerMap() {
 
   return (
     <>
-      <div ref={mapDivRef} className="map" />
+      <div ref={mapDivRef} className="map" style={{ width: "100vw", height: "100dvh" }} />
 
       {tab === "map" && (
         <div className="topbar">
