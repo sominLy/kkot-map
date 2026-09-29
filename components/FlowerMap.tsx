@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { supabase, type Report, type Season } from "@/lib/supabase";
 import { addMyReportId } from "@/lib/myReports";
 import { bumpStat, collectFlower } from "@/lib/game";
+import { dday, foliageHeadline } from "@/lib/content";
+import { applyTheme, isFoliage } from "@/lib/theme";
 import CardModal from "./CardModal";
 import ReportModal from "./ReportModal";
 import ReportPopup from "./ReportPopup";
@@ -12,10 +14,16 @@ import InfoTab from "./InfoTab";
 import MyPage from "./MyPage";
 import RankingTab from "./RankingTab";
 import RainOverlay from "./RainOverlay";
+import Icon from "./Icon";
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const naver: any;
+}
+
+function pinHtml(report: Report, emoji: string) {
+  const sns = report.source_url ? " sns" : "";
+  return `<div class="pin ${report.bloom_state}${sns}"><span class="pin-emoji">${emoji}</span></div>`;
 }
 
 export default function FlowerMap() {
@@ -46,6 +54,11 @@ export default function FlowerMap() {
   useEffect(() => {
     pickingRef.current = picking;
   }, [picking]);
+
+  // 보고 있는 시즌 색으로 앱 전체 톤을 바꾼다 (단풍이면 단풍색)
+  useEffect(() => {
+    if (viewSeason) applyTheme(viewSeason);
+  }, [viewSeason]);
 
   useEffect(() => {
     if (!mapDivRef.current || typeof naver === "undefined") return;
@@ -103,10 +116,8 @@ export default function FlowerMap() {
         map,
         position: new naver.maps.LatLng(report.lat, report.lng),
         icon: {
-          content: `<div style="font-size:26px;filter:${
-            report.bloom_state === "faded" ? "grayscale(1)" : "none"
-          }">${viewSeason.emoji}</div>`,
-          anchor: new naver.maps.Point(13, 13),
+          content: pinHtml(report, viewSeason.emoji),
+          anchor: new naver.maps.Point(18, 43),
         },
       });
       naver.maps.Event.addListener(marker, "click", () => setSelected(report));
@@ -132,11 +143,7 @@ export default function FlowerMap() {
           myMarkerRef.current = new naver.maps.Marker({
             map: mapRef.current,
             position: pos,
-            icon: {
-              content:
-                '<div style="width:16px;height:16px;border-radius:50%;background:#4285f4;border:3px solid #fff;box-shadow:0 0 8px rgba(66,133,244,.6)"></div>',
-              anchor: new naver.maps.Point(8, 8),
-            },
+            icon: { content: '<div class="me-dot"></div>', anchor: new naver.maps.Point(9, 9) },
           });
         } else {
           myMarkerRef.current.setPosition(pos);
@@ -158,28 +165,84 @@ export default function FlowerMap() {
   }
 
   const isViewingActive = viewSeason?.id === activeSeason?.id;
+  const news = viewSeason && isFoliage(viewSeason) ? foliageHeadline() : null;
 
   return (
     <>
-      <div ref={mapDivRef} style={{ width: "100vw", height: "100vh" }} />
-
-      {tab === "map" && <RainOverlay lat={37.5665} lng={126.978} />}
+      <div ref={mapDivRef} className="map" />
 
       {tab === "map" && (
-        <button className="season-banner" onClick={() => setPickerOpen(true)}>
-          {viewSeason
-            ? isViewingActive
-              ? `${viewSeason.emoji} 지금은 ${viewSeason.flower_name} 시즌!`
-              : `${viewSeason.emoji} ${viewSeason.flower_name} 명소 구경 중`
-            : "시즌 정보를 불러오는 중…"}
-          <span className="season-caret">▾</span>
-        </button>
+        <div className="topbar">
+          <button className="season-banner glass" onClick={() => setPickerOpen(true)}>
+            <span className="season-disc">{viewSeason?.emoji ?? "🌸"}</span>
+            <span className="season-text">
+              <span className="eyebrow">{isViewingActive ? "Now · 지금 시즌" : "명소 구경 중"}</span>
+              <strong>
+                {viewSeason
+                  ? `${viewSeason.flower_name} ${isViewingActive ? "시즌" : "명소"}`
+                  : "시즌을 불러오는 중…"}
+              </strong>
+            </span>
+            <span className="season-caret">
+              <Icon name="chevronDown" size={18} />
+            </span>
+          </button>
+
+          {news?.observed && (
+            <div className="news-chip glass">
+              <span className="news-dot" />
+              <span>
+                {news.observed.place} 첫 단풍 <b>{Number(news.observed.date.slice(5, 7))}/{Number(news.observed.date.slice(8))}</b> 관측
+              </span>
+              {news.nextPeak && (
+                <span className="dchip">
+                  {news.nextPeak.place} 절정 D-{dday(news.nextPeak.date)}
+                </span>
+              )}
+            </div>
+          )}
+
+          <RainOverlay lat={37.5665} lng={126.978} />
+        </div>
+      )}
+
+      {tab === "map" && !picking && (
+        <div className="fab-stack">
+          <button
+            className="round-btn glass"
+            onClick={goToMyLocation}
+            disabled={locating}
+            aria-label="내 위치로 이동"
+          >
+            <Icon name="locate" size={22} />
+          </button>
+        </div>
+      )}
+
+      {picking && (
+        <div className="picking-bar">
+          <Icon name="pin" size={18} />
+          지도를 눌러 위치를 골라주세요
+          <button onClick={() => setPicking(false)}>취소</button>
+        </div>
       )}
 
       {pickerOpen && (
-        <div className="modal-backdrop" onClick={() => setPickerOpen(false)}>
-          <div className="modal" onClick={(e) => e.stopPropagation()}>
-            <h2>어떤 꽃을 구경할까요?</h2>
+        <div className="sheet-backdrop" onClick={() => setPickerOpen(false)}>
+          <div className="sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="sheet-head">
+              <div>
+                <p className="eyebrow">Season</p>
+                <h2>어떤 풍경을 구경할까요?</h2>
+                <p>
+                  제보는 지금 시즌({activeSeason?.emoji} {activeSeason?.flower_name})만 받아요.
+                  다른 꽃은 명소 구경용이에요.
+                </p>
+              </div>
+              <button className="icon-btn" onClick={() => setPickerOpen(false)} aria-label="닫기">
+                <Icon name="close" size={18} />
+              </button>
+            </div>
             <div className="season-grid">
               {seasons.map((s) => (
                 <button
@@ -197,29 +260,8 @@ export default function FlowerMap() {
                 </button>
               ))}
             </div>
-            <p className="privacy-note">
-              제보는 지금 시즌({activeSeason?.emoji} {activeSeason?.flower_name})
-              꽃만 가능해요. 다른 꽃은 명소 구경용이에요 🌸
-            </p>
           </div>
         </div>
-      )}
-
-      {tab === "map" && (
-        <button
-          className="locate-btn"
-          onClick={goToMyLocation}
-          disabled={locating}
-          aria-label="내 위치로 이동"
-        >
-          {locating ? "⏳" : "🧭"}
-        </button>
-      )}
-
-      {picking && (
-        <button className="report-fab picking" onClick={() => setPicking(false)}>
-          지도를 눌러 위치를 골라주세요 (취소)
-        </button>
       )}
 
       {tab === "info" && <InfoTab />}
@@ -231,7 +273,7 @@ export default function FlowerMap() {
           }}
         />
       )}
-      {tab === "my" && <MyPage onShowOnMap={showOnMap} />}
+      {tab === "my" && <MyPage seasons={seasons} onShowOnMap={showOnMap} />}
 
       {reporting && activeSeason && (
         <ReportModal

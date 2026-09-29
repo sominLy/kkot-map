@@ -25,6 +25,7 @@ export type Report = {
   likes: number;
   visits: number;
   source_url: string | null;
+  source_posted_at?: string | null;
   hidden: boolean;
   created_at: string;
 };
