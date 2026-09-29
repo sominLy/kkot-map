@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { supabase, type Report } from "@/lib/supabase";
+import { splitMemo } from "@/lib/theme";
+import Icon from "./Icon";
 
 type Cluster = {
   lat: number;
@@ -19,12 +21,15 @@ function clusterReports(reports: Report[]): Cluster[] {
     grid.get(key)!.reports.push(r);
   }
   return [...grid.values()]
-    .map(({ reports: rs }) => ({
-      lat: rs[0].lat,
-      lng: rs[0].lng,
-      count: rs.length,
-      label: rs.find((r) => r.memo)?.memo.split("—")[0].trim() ?? "이름 없는 동네",
-    }))
+    .map(({ reports: rs }) => {
+      const named = rs.find((r) => r.memo);
+      return {
+        lat: rs[0].lat,
+        lng: rs[0].lng,
+        count: rs.length,
+        label: named ? splitMemo(named.memo).title : "이름 없는 동네",
+      };
+    })
     .sort((a, b) => b.count - a.count)
     .slice(0, 5);
 }
@@ -58,45 +63,66 @@ export default function RankingTab({
   }, []);
 
   return (
-    <div className="sheet">
-      <h3 className="section-title">🏆 이번 주 제보 핫플</h3>
-      {weekly === null && <p className="empty">불러오는 중…</p>}
-      {weekly?.length === 0 && (
-        <p className="empty">이번 주 제보가 아직 없어요. 첫 제보의 주인공이 되어보세요!</p>
-      )}
-      {weekly?.map((c, i) => (
-        <button
-          key={`${c.lat},${c.lng}`}
-          className="my-report"
-          onClick={() => onShowOnMap(c.lat, c.lng)}
-        >
-          <span className="my-report-memo">
-            {["🥇", "🥈", "🥉", "4️⃣", "5️⃣"][i]} {c.label}
-          </span>
-          <span className="my-report-meta">이번 주 제보 {c.count}건 · 눌러서 지도 보기</span>
-        </button>
-      ))}
+    <div className="page">
+      <div className="page-inner">
+        <header className="page-head">
+          <p className="eyebrow">This week</p>
+          <h1>랭킹</h1>
+          <p>이번 주 제보가 몰린 동네와 사랑받은 사진이에요.</p>
+        </header>
 
-      <h3 className="section-title">❤️ 좋아요 많은 사진</h3>
-      {topPhotos === null && <p className="empty">불러오는 중…</p>}
-      {topPhotos?.length === 0 && (
-        <p className="empty">
-          아직 좋아요 받은 사진이 없어요.
-          <br />
-          마음에 드는 제보 사진에 ❤️를 눌러주세요!
-        </p>
-      )}
-      {topPhotos && topPhotos.length > 0 && (
-        <div className="photo-grid">
-          {topPhotos.map((r) => (
-            <button key={r.id} className="photo-cell" onClick={() => onShowOnMap(r.lat, r.lng)}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={r.photo_url!} alt={r.memo || "제보 사진"} />
-              <span>❤️ {r.likes}</span>
-            </button>
-          ))}
+        <div className="section-title">
+          <h2>이번 주 제보 핫플</h2>
+          <span>최근 7일</span>
         </div>
-      )}
+        {weekly === null && (
+          <>
+            <div className="skeleton" />
+            <div className="skeleton" />
+          </>
+        )}
+        {weekly?.length === 0 && (
+          <p className="empty">이번 주 제보가 아직 없어요. 첫 제보의 주인공이 되어보세요.</p>
+        )}
+        {weekly && weekly.length > 0 && (
+          <section className="card row-list">
+            {weekly.map((c, i) => (
+              <button key={`${c.lat},${c.lng}`} className="row" onClick={() => onShowOnMap(c.lat, c.lng)}>
+                <span className={`row-rank${i < 3 ? " top" : ""}`}>{i + 1}</span>
+                <span className="row-body">
+                  <span className="row-title">{c.label}</span>
+                  <span className="row-meta">이번 주 제보 {c.count}건</span>
+                </span>
+                <Icon name="chevronRight" size={18} className="row-go" />
+              </button>
+            ))}
+          </section>
+        )}
+
+        <div className="section-title">
+          <h2>좋아요 많은 사진</h2>
+          <span>전체 기간</span>
+        </div>
+        {topPhotos === null && <div className="skeleton" style={{ height: 180 }} />}
+        {topPhotos?.length === 0 && (
+          <p className="empty">
+            아직 좋아요를 받은 사진이 없어요.
+            <br />
+            마음에 드는 제보 사진에 하트를 눌러주세요.
+          </p>
+        )}
+        {topPhotos && topPhotos.length > 0 && (
+          <div className="photo-grid">
+            {topPhotos.map((r) => (
+              <button key={r.id} className="photo-cell" onClick={() => onShowOnMap(r.lat, r.lng)}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={r.photo_url!} alt={r.memo || "제보 사진"} />
+                <span>♥ {r.likes}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

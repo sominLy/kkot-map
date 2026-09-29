@@ -52,7 +52,7 @@ export default function RainOverlay({ lat, lng }: { lat: number; lng: number }) 
           />
         ))}
       </div>
-      <div className="rain-bubble">🌧️ 꽃들이 비를 마시고 있어요~</div>
+      <div className="rain-bubble glass">🌧️ 꽃들이 비를 마시고 있어요</div>
     </>
   );
 }
