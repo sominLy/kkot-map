@@ -13,6 +13,7 @@ import {
   type SolarTerm,
 } from "@/lib/content";
 import Icon from "./Icon";
+import EventCalendar from "./EventCalendar";
 
 const md = (date: string) => date.slice(5).replace("-", ".");
 const MONTH_EMOJI = ["❄️", "❄️", "🌸", "🌸", "🌸", "🌻", "🌻", "🌻", "🍁", "🍁", "🍁", "❄️"];
@@ -106,6 +107,8 @@ export default function InfoTab() {
             {MONTH_EMOJI[now.getMonth()]}
           </span>
         </section>
+
+        <EventCalendar />
 
         <div className="section-title">
           <h2>2026 단풍 달력</h2>
