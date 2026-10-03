@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { supabase, type Report, type Season } from "@/lib/supabase";
+import { supabase, withInstagramSource, type Report, type Season } from "@/lib/supabase";
 import { addMyReportId } from "@/lib/myReports";
 import { bumpStat, collectFlower } from "@/lib/game";
 import { dday, foliageHeadline } from "@/lib/content";
@@ -162,7 +162,7 @@ export default function FlowerMap() {
       for (const marker of markersRef.current.values()) marker.setMap(null);
       markersRef.current.clear();
       setSelected(null);
-      setReports(data ?? []);
+      setReports((data ?? []).map(withInstagramSource));
       setLoading(false);
     })();
   }, [viewSeason]);

@@ -40,3 +40,19 @@ export type Report = {
   hidden: boolean;
   created_at: string;
 };
+
+/** 출처는 인스타그램 게시물만 보여준다. 예전 시드에 남은 블로그·기사 링크는 null로. */
+export function instagramOnly(url: string | null | undefined): string | null {
+  if (!url) return null;
+  try {
+    const host = new URL(url).hostname;
+    return host === "instagram.com" || host.endsWith(".instagram.com") ? url : null;
+  } catch {
+    return null;
+  }
+}
+
+export function withInstagramSource(r: Report): Report {
+  const source_url = instagramOnly(r.source_url);
+  return source_url === r.source_url ? r : { ...r, source_url, source_posted_at: null };
+}
