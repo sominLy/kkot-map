@@ -5,6 +5,7 @@ import exifr from "exifr";
 import { supabase, type Report, type Season } from "@/lib/supabase";
 import { fuzzCoord, sanitizePhoto } from "@/lib/photo";
 import { copyFor } from "@/lib/theme";
+import { useEscape } from "@/lib/useEscape";
 import Icon from "./Icon";
 
 const STATES: Report["bloom_state"][] = ["blooming", "full", "faded"];
@@ -15,11 +16,14 @@ export default function ReportModal({
   onPickOnMap,
   onClose,
   onCreated,
+  hidden = false,
 }: {
   season: Season;
   pos: { lat: number; lng: number } | null;
   onPickOnMap: () => void;
   onClose: () => void;
+  /** 지도에서 위치를 고르는 동안 입력 내용을 지키려고 숨기기만 한다 */
+  hidden?: boolean;
   onCreated: (r: Report) => void;
 }) {
   const [memo, setMemo] = useState("");
@@ -103,8 +107,10 @@ export default function ReportModal({
     }
   }
 
+  useEscape(onClose, !hidden);
+
   return (
-    <div className="sheet-backdrop" onClick={onClose}>
+    <div className="sheet-backdrop" onClick={onClose} hidden={hidden}>
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <div>

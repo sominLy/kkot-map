@@ -15,6 +15,14 @@ import {
 import Icon from "./Icon";
 import EventCalendar from "./EventCalendar";
 
+const SECTIONS: [string, string][] = [
+  ["sec-term", "지금 절기"],
+  ["sec-events", "이벤트"],
+  ["sec-foliage", "단풍 달력"],
+  ["sec-terms", "24절기"],
+  ["sec-flowers", "꽃 도감"],
+];
+
 const md = (date: string) => date.slice(5).replace("-", ".");
 const MONTH_EMOJI = ["❄️", "❄️", "🌸", "🌸", "🌸", "🌻", "🌻", "🌻", "🍁", "🍁", "🍁", "❄️"];
 
@@ -80,7 +88,18 @@ export default function InfoTab() {
           <p>절기와 제철, 그리고 지금 어디가 물들고 있는지.</p>
         </header>
 
-        <section className="hero-card">
+        <nav className="section-nav" aria-label="도감 바로가기">
+          {SECTIONS.map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+
+        <section className="hero-card anchor" id="sec-term">
           <p className="eyebrow">
             지금 절기 · {current.month}월 {current.day}일부터
           </p>
@@ -108,9 +127,10 @@ export default function InfoTab() {
           </span>
         </section>
 
+        <div id="sec-events" className="anchor" />
         <EventCalendar />
 
-        <div className="section-title">
+        <div className="section-title anchor" id="sec-foliage">
           <h2>2026 단풍 달력</h2>
           <span>{md(FOLIAGE_2026.updated)} 기준</span>
         </div>
@@ -143,7 +163,7 @@ export default function InfoTab() {
           </p>
         </section>
 
-        <div className="section-title">
+        <div className="section-title anchor" id="sec-terms">
           <h2>24절기 한눈에</h2>
           <span>2024년 이후 자료 기준</span>
         </div>
@@ -202,7 +222,7 @@ export default function InfoTab() {
           })}
         </section>
 
-        <div className="section-title">
+        <div className="section-title anchor" id="sec-flowers">
           <h2>시즌별 꽃 도감</h2>
           <span>명소는 예시예요</span>
         </div>

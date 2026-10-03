@@ -8,6 +8,8 @@ import {
   eventStatus,
   type SeasonEvent,
 } from "@/lib/events";
+import { downloadIcs } from "@/lib/ics";
+import { toast } from "@/lib/toast";
 
 const YEARS = [...new Set(SEASON_EVENTS.map((e) => e.start.slice(0, 4)))];
 
@@ -54,14 +56,7 @@ export default function EventCalendar() {
             const s = statusLabel(e, now);
             const prev = lastYear(e);
             return (
-              <a
-                key={`${e.title}-${e.start}`}
-                role="listitem"
-                className={`event-card ${s.cls}`}
-                href={e.source.url}
-                target="_blank"
-                rel="noreferrer noopener"
-              >
+              <div key={`${e.title}-${e.start}`} role="listitem" className={`event-card ${s.cls}`}>
                 <span className="event-card-top">
                   <span className="event-emoji">{e.emoji}</span>
                   <span className={`event-badge ${s.cls}`}>{s.text}</span>
@@ -70,7 +65,20 @@ export default function EventCalendar() {
                 <span className="event-when">{eventRange(e)}</span>
                 <span className="event-where">{e.place}</span>
                 {prev && <span className="event-prev">작년 {eventRange(prev)}</span>}
-              </a>
+                <span className="event-actions">
+                  <button
+                    onClick={() => {
+                      downloadIcs(e);
+                      toast("캘린더 파일을 받았어요. 열면 일정에 추가돼요");
+                    }}
+                  >
+                    📅 일정 추가
+                  </button>
+                  <a href={e.source.url} target="_blank" rel="noreferrer noopener">
+                    자세히
+                  </a>
+                </span>
+              </div>
             );
           })}
         </div>
@@ -113,7 +121,21 @@ export default function EventCalendar() {
                         출처 · {e.source.label}
                       </a>
                     </span>
-                    <span className={`event-badge ${s.cls}`}>{s.text}</span>
+                    <span className="event-side">
+                      <span className={`event-badge ${s.cls}`}>{s.text}</span>
+                      {s.cls !== "done" && (
+                        <button
+                          className="ics-btn"
+                          aria-label={`${e.title} 캘린더에 추가`}
+                          onClick={() => {
+                            downloadIcs(e);
+                            toast("캘린더 파일을 받았어요. 열면 일정에 추가돼요");
+                          }}
+                        >
+                          📅
+                        </button>
+                      )}
+                    </span>
                   </li>
                 );
               })}

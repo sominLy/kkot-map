@@ -5,6 +5,8 @@ import { supabase, type Report, type Season } from "@/lib/supabase";
 import { hasLiked, likeReport } from "@/lib/likes";
 import { bumpStat, collectFlower, hasVisited, markVisited } from "@/lib/game";
 import { copyFor, dotDate, splitMemo, timeAgo } from "@/lib/theme";
+import { toast } from "@/lib/toast";
+import { useEscape } from "@/lib/useEscape";
 import Icon from "./Icon";
 
 const STATE_CHIP: Record<Report["bloom_state"], string> = {
@@ -26,6 +28,30 @@ export default function ReportPopup({
 }) {
   const copy = copyFor(season);
   const { title, desc } = splitMemo(report.memo);
+  useEscape(onClose);
+
+  const placeName = title || "꽃맵 제보 장소";
+  // 카카오맵 길찾기 URL 스킴: /link/to/이름,위도,경도
+  const directionsUrl = `https://map.kakao.com/link/to/${encodeURIComponent(placeName)},${report.lat},${report.lng}`;
+
+  async function share() {
+    const url = `${location.origin}/?spot=${report.id}`;
+    const text = `${season.emoji} ${placeName} — 꽃맵에서 보기`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: placeName, text, url });
+      } catch {
+        // 사용자가 공유 창을 닫음
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(`${text}\n${url}`);
+      toast("링크를 복사했어요");
+    } catch {
+      toast("복사하지 못했어요. 주소창의 링크를 공유해 주세요");
+    }
+  }
 
   const [vote, setVote] = useState<"fresh" | "faded" | null>(null);
   const [flagged, setFlagged] = useState<"" | "user" | "source-removal">("");
@@ -91,6 +117,17 @@ export default function ReportPopup({
             aria-label={liked ? "좋아요 누름" : "좋아요"}
           >
             <Icon name="heart" size={20} />
+          </button>
+        </div>
+
+        <div className="action-row">
+          <a className="action-btn" href={directionsUrl} target="_blank" rel="noreferrer noopener">
+            <Icon name="pin" size={18} />
+            길찾기
+          </a>
+          <button className="action-btn" onClick={share}>
+            <Icon name="external" size={18} />
+            공유하기
           </button>
         </div>
 

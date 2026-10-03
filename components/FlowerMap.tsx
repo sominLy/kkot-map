@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, type Report, type Season } from "@/lib/supabase";
 import { addMyReportId } from "@/lib/myReports";
 import { bumpStat, collectFlower } from "@/lib/game";
 import { dday, foliageHeadline } from "@/lib/content";
-import { applyTheme, isFoliage } from "@/lib/theme";
+import { applyTheme, copyFor, isFoliage, splitMemo } from "@/lib/theme";
+import { toast } from "@/lib/toast";
+import { useEscape } from "@/lib/useEscape";
 import CardModal from "./CardModal";
 import ReportModal from "./ReportModal";
 import ReportPopup from "./ReportPopup";
@@ -20,6 +22,27 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const naver: any;
 }
+
+type Filter = "all" | "blooming" | "full" | "sns";
+
+function matches(r: Report, f: Filter) {
+  if (f === "all") return true;
+  if (f === "sns") return !!r.source_url;
+  return r.bloom_state === f;
+}
+
+/** 두 좌표 사이 거리(km) */
+function distanceKm(a: { lat: number; lng: number }, b: { lat: number; lng: number }) {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+const ONBOARD_KEY = "kkotmap-onboarded";
 
 function pinHtml(report: Report, emoji: string) {
   const sns = report.source_url ? " sns" : "";
@@ -51,9 +74,32 @@ export default function FlowerMap() {
     place?: string;
   } | null>(null);
 
+  const [filter, setFilter] = useState<Filter>("all");
+  const [myPos, setMyPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [onboarding, setOnboarding] = useState(false);
+  // ?spot=ID 공유 링크로 들어왔을 때 열어야 할 제보
+  const pendingSpotRef = useRef<number | null>(null);
+  const fittedSeasonRef = useRef<number | null>(null);
+
   useEffect(() => {
     pickingRef.current = picking;
   }, [picking]);
+
+  useEffect(() => {
+    const id = Number(new URLSearchParams(location.search).get("spot"));
+    if (id) pendingSpotRef.current = id;
+    try {
+      if (!localStorage.getItem(ONBOARD_KEY)) setOnboarding(true);
+    } catch {
+      // 저장소를 못 쓰는 브라우저면 안내를 건너뛴다
+    }
+  }, []);
+
+  const closePicker = useCallback(() => setPickerOpen(false), []);
+  useEscape(closePicker, pickerOpen);
+  const cancelPicking = useCallback(() => setPicking(false), []);
+  useEscape(cancelPicking, picking);
 
   // 보고 있는 시즌 색으로 앱 전체 톤을 바꾼다 (단풍이면 단풍색)
   useEffect(() => {
@@ -80,17 +126,31 @@ export default function FlowerMap() {
 
     (async () => {
       const { data } = await supabase.from("seasons").select("*").order("id");
-      if (!data || data.length === 0) return;
+      if (!data || data.length === 0) {
+        setLoading(false);
+        return;
+      }
       setSeasons(data);
       const active = data.find((s: Season) => s.is_active) ?? data[0];
       setActiveSeason(active);
-      setViewSeason(active);
+      // 공유 링크의 제보가 다른 시즌이면 그 시즌을 연다
+      let view = active;
+      if (pendingSpotRef.current) {
+        const { data: spot } = await supabase
+          .from("reports")
+          .select("season_id")
+          .eq("id", pendingSpotRef.current)
+          .maybeSingle();
+        view = data.find((s: Season) => s.id === spot?.season_id) ?? active;
+      }
+      setViewSeason(view);
     })();
   }, []);
 
   // 보고 있는 시즌이 바뀌면 제보를 다시 불러오고 마커를 교체
   useEffect(() => {
     if (!viewSeason) return;
+    setLoading(true);
     (async () => {
       const { data } = await supabase
         .from("reports")
@@ -103,6 +163,7 @@ export default function FlowerMap() {
       markersRef.current.clear();
       setSelected(null);
       setReports(data ?? []);
+      setLoading(false);
     })();
   }, [viewSeason]);
 
@@ -123,7 +184,49 @@ export default function FlowerMap() {
       naver.maps.Event.addListener(marker, "click", () => setSelected(report));
       markersRef.current.set(report.id, marker);
     }
+
+    // 공유 링크로 들어온 제보가 있으면 그 자리로
+    const pending = pendingSpotRef.current && reports.find((r) => r.id === pendingSpotRef.current);
+    if (pending) {
+      pendingSpotRef.current = null;
+      fittedSeasonRef.current = viewSeason.id;
+      setSelected(pending);
+      map.morph(new naver.maps.LatLng(pending.lat, pending.lng), 14);
+      return;
+    }
+    // 시즌을 처음 열 때 명소가 모두 보이도록 지도 범위를 맞춘다
+    if (reports.length > 0 && fittedSeasonRef.current !== viewSeason.id) {
+      fittedSeasonRef.current = viewSeason.id;
+      const bounds = new naver.maps.LatLngBounds();
+      for (const r of reports) bounds.extend(new naver.maps.LatLng(r.lat, r.lng));
+      map.fitBounds(bounds, { top: 170, right: 40, bottom: 260, left: 40 });
+    }
   }, [reports, viewSeason]);
+
+  // 필터에 맞는 핀만 보이게
+  useEffect(() => {
+    for (const r of reports) markersRef.current.get(r.id)?.setVisible(matches(r, filter));
+  }, [filter, reports]);
+
+  const visibleSpots = useMemo(() => {
+    const list = reports.filter((r) => matches(r, filter));
+    if (myPos) {
+      return list
+        .map((r) => ({ r, km: distanceKm(myPos, r) }))
+        .sort((a, b) => a.km - b.km)
+        .slice(0, 20);
+    }
+    // 위치를 모르면 인스타 화제 → 사진 → 반응 많은 순
+    return list
+      .map((r) => ({ r, km: null as number | null }))
+      .sort(
+        (a, b) =>
+          Number(!!b.r.source_url) - Number(!!a.r.source_url) ||
+          Number(!!b.r.photo_url) - Number(!!a.r.photo_url) ||
+          b.r.likes + b.r.fresh_votes - (a.r.likes + a.r.fresh_votes)
+      )
+      .slice(0, 20);
+  }, [reports, filter, myPos]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const myMarkerRef = useRef<any>(null);
@@ -131,13 +234,15 @@ export default function FlowerMap() {
 
   function goToMyLocation() {
     if (!navigator.geolocation) {
-      alert("이 브라우저는 위치 기능을 지원하지 않아요");
+      toast("이 브라우저는 위치 기능을 지원하지 않아요");
       return;
     }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (p) => {
         setLocating(false);
+        setMyPos({ lat: p.coords.latitude, lng: p.coords.longitude });
+        toast("가까운 명소 순으로 정렬했어요");
         const pos = new naver.maps.LatLng(p.coords.latitude, p.coords.longitude);
         if (!myMarkerRef.current) {
           myMarkerRef.current = new naver.maps.Marker({
@@ -152,7 +257,7 @@ export default function FlowerMap() {
       },
       () => {
         setLocating(false);
-        alert("위치를 가져오지 못했어요. 브라우저 위치 권한을 확인해주세요.");
+        toast("위치를 가져오지 못했어요. 브라우저 위치 권한을 확인해 주세요");
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
@@ -164,6 +269,22 @@ export default function FlowerMap() {
     mapRef.current?.morph(new naver.maps.LatLng(r.lat, r.lng), 15);
   }
 
+  function dismissOnboarding() {
+    setOnboarding(false);
+    try {
+      localStorage.setItem(ONBOARD_KEY, "1");
+    } catch {
+      // 무시
+    }
+  }
+
+  const copy = copyFor(viewSeason);
+  const FILTERS: { id: Filter; label: string }[] = [
+    { id: "all", label: "전체" },
+    { id: "blooming", label: `${copy.stateEmoji.blooming} ${copy.state.blooming}` },
+    { id: "full", label: `${copy.stateEmoji.full} ${copy.state.full}` },
+    { id: "sns", label: "📸 인스타 화제" },
+  ];
   const isViewingActive = viewSeason?.id === activeSeason?.id;
   const news = viewSeason && isFoliage(viewSeason) ? foliageHeadline() : null;
 
@@ -202,7 +323,85 @@ export default function FlowerMap() {
             </div>
           )}
 
+          <div className="filter-row" role="toolbar" aria-label="명소 필터">
+            {FILTERS.map((f) => (
+              <button
+                key={f.id}
+                className={`filter-chip glass${filter === f.id ? " on" : ""}`}
+                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f.id)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
           <RainOverlay lat={37.5665} lng={126.978} />
+        </div>
+      )}
+
+      {tab === "map" && !picking && (
+        <section className="spot-strip-wrap" aria-label="명소 둘러보기">
+          <p className="spot-count">
+            {loading ? (
+              "명소를 불러오는 중…"
+            ) : (
+              <>
+                명소 <b>{visibleSpots.length < 20 ? visibleSpots.length : "20+"}</b>곳
+                {myPos ? " · 가까운 순" : ""}
+              </>
+            )}
+          </p>
+          {!loading && visibleSpots.length === 0 && (
+            <div className="spot-empty glass">
+              {filter === "all"
+                ? "아직 제보가 없어요. 가운데 + 버튼으로 첫 제보를 남겨주세요."
+                : "이 조건에 맞는 명소가 없어요. 필터를 바꿔보세요."}
+            </div>
+          )}
+          <div className="spot-strip">
+            {visibleSpots.map(({ r, km }) => {
+              const { title } = splitMemo(r.memo);
+              return (
+                <button
+                  key={r.id}
+                  className={`spot-card glass${selected?.id === r.id ? " on" : ""}`}
+                  onClick={() => showOnMap(r)}
+                >
+                  <span className="spot-thumb">
+                    {r.photo_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={r.photo_url} alt="" loading="lazy" />
+                    ) : (
+                      viewSeason?.emoji
+                    )}
+                  </span>
+                  <span className="spot-body">
+                    <b>{title || "이름 없는 장소"}</b>
+                    <span>
+                      {copy.stateEmoji[r.bloom_state]} {copy.state[r.bloom_state]}
+                      {km !== null ? ` · ${km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(km < 10 ? 1 : 0)}km`}` : ""}
+                      {r.source_url ? " · 📸" : ""}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {tab === "map" && onboarding && (
+        <div className="onboard glass" role="dialog" aria-label="꽃맵 사용법">
+          <b>꽃맵, 이렇게 써요</b>
+          <ol>
+            <li>핀이나 아래 카드를 누르면 명소 정보와 길찾기가 나와요</li>
+            <li>위쪽 칩으로 절정·인스타 화제 명소만 골라 볼 수 있어요</li>
+            <li>꽃을 발견하면 가운데 + 버튼으로 제보해 주세요</li>
+          </ol>
+          <button className="btn primary" onClick={dismissOnboarding}>
+            알겠어요
+          </button>
         </div>
       )}
 
@@ -279,14 +478,15 @@ export default function FlowerMap() {
         <ReportModal
           season={activeSeason}
           pos={draftPos}
+          hidden={picking}
           onPickOnMap={() => {
-            setReporting(false);
             setTab("map");
             setViewSeason(activeSeason);
             setPicking(true);
           }}
           onClose={() => {
             setReporting(false);
+            setPicking(false);
             setDraftPos(null);
           }}
           onCreated={(r) => {
@@ -298,6 +498,7 @@ export default function FlowerMap() {
             setReporting(false);
             setDraftPos(null);
             showOnMap(r);
+            toast("제보를 올렸어요. 고마워요!");
             setEarnedCard({
               flower: activeSeason.flower_name,
               emoji: activeSeason.emoji,

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { shareCard } from "@/lib/game";
 import { splitMemo } from "@/lib/theme";
+import { useEscape } from "@/lib/useEscape";
 import Icon from "./Icon";
 
 export default function CardModal({
@@ -20,6 +21,7 @@ export default function CardModal({
 }) {
   const [shareMsg, setShareMsg] = useState("");
   const [today] = useState(() => new Date());
+  useEscape(onClose);
 
   async function share() {
     const result = await shareCard(flower, emoji, place);
