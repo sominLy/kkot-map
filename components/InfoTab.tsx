@@ -14,11 +14,13 @@ import {
 } from "@/lib/content";
 import Icon from "./Icon";
 import EventCalendar from "./EventCalendar";
+import { PHOTOGRAPHERS, PHOTOGRAPHERS_CHECKED_AT, followersLabel } from "@/lib/photographers";
 
 const SECTIONS: [string, string][] = [
   ["sec-term", "지금 절기"],
   ["sec-events", "이벤트"],
   ["sec-foliage", "단풍 달력"],
+  ["sec-photo", "출사 계정"],
   ["sec-terms", "24절기"],
   ["sec-flowers", "꽃 도감"],
 ];
@@ -160,6 +162,39 @@ export default function InfoTab() {
           </ol>
           <p className="card-foot">
             출처: {FOLIAGE_2026.source}. 첫 단풍은 산 전체의 약 20%가 물든 때를 말해요.
+          </p>
+        </section>
+
+        <div className="section-title anchor" id="sec-photo">
+          <h2>단풍 출사 추천 계정</h2>
+          <span>팔로워 {md(PHOTOGRAPHERS_CHECKED_AT)} 기준</span>
+        </div>
+        <section className="card photo-list">
+          <ul>
+            {PHOTOGRAPHERS.map((p) => (
+              <li key={p.handle}>
+                <a
+                  href={`https://www.instagram.com/${p.handle}/`}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <span className="photo-avatar" aria-hidden>
+                    {p.name.slice(0, 1)}
+                  </span>
+                  <span className="row-body">
+                    <b>@{p.handle}</b>
+                    <span className="row-meta">
+                      {p.name} · {p.focus}
+                    </span>
+                  </span>
+                  <span className="photo-followers">{followersLabel(p.followers)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="card-foot">
+            사진 계정 프로필로 연결돼요. 꽃맵은 사진·글을 가져오지 않고 링크만 걸어요. 게시물을 지도에
+            올리고 싶으면 링크를 제보해 주세요.
           </p>
         </section>
 
