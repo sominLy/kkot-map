@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { supabase, type Report, type Season } from "@/lib/supabase";
+import { instagramOnly, supabase, type Report, type Season } from "@/lib/supabase";
 import { hasLiked, likeReport } from "@/lib/likes";
 import { bumpStat, collectFlower, hasVisited, markVisited } from "@/lib/game";
 import { copyFor, dotDate, splitMemo, timeAgo } from "@/lib/theme";
@@ -28,6 +28,8 @@ export default function ReportPopup({
 }) {
   const copy = copyFor(season);
   const { title, desc } = splitMemo(report.memo);
+  // 마이·랭킹에서 넘어온 제보도 인스타 링크만 남긴다
+  const sourceUrl = instagramOnly(report.source_url);
   useEscape(onClose);
 
   const placeName = title || "꽃맵 제보 장소";
@@ -92,7 +94,8 @@ export default function ReportPopup({
   const visits = (report.visits ?? 0) + (visited && !initialVisited ? 1 : 0);
   const fresh = report.fresh_votes + (vote === "fresh" ? 1 : 0);
   // 운영자 시드·SNS 출처가 아닌 실제 사용자 제보에만 제보 시점을 붙인다
-  const isUserReport = !report.source_url && !report.memo.endsWith("(운영자 추천)");
+  // 운영자·SNS 시드는 memo가 "이름 — 설명" 형식이라 사용자 제보와 구분된다
+  const isUserReport = !sourceUrl && !report.memo.includes(" — ");
 
   return (
     <div className="sheet-backdrop" onClick={onClose}>
@@ -141,11 +144,11 @@ export default function ReportPopup({
           {visits > 0 && <span className="chip">👣 {visits}명 다녀감</span>}
         </div>
 
-        {report.source_url && (
+        {sourceUrl && (
           <>
             <a
               className="source-card"
-              href={report.source_url}
+              href={sourceUrl}
               target="_blank"
               rel="noreferrer noopener"
             >
@@ -203,7 +206,7 @@ export default function ReportPopup({
               <button className="text-btn" onClick={() => flag("user")}>
                 부적절한 제보 신고
               </button>
-              {report.source_url && (
+              {sourceUrl && (
                 <button className="text-btn" onClick={() => flag("source-removal")}>
                   원 게시자예요 · 링크 삭제 요청
                 </button>
