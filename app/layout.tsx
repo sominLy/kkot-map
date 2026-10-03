@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import Script from "next/script";
 import "./globals.css";
+import Toaster from "@/components/Toaster";
 import { SITE_DESC, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -55,6 +56,7 @@ export default function RootLayout({
           src={`https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}`}
         />
         {children}
+        <Toaster />
       </body>
     </html>
   );

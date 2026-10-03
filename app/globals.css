@@ -41,6 +41,7 @@
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --tabbar: 64px;
   --tabbar-gap: 12px;
+  --strip-h: 118px;
   --page-bottom: calc(var(--tabbar) + var(--tabbar-gap) * 2 + env(safe-area-inset-bottom) + 12px);
 }
 
@@ -252,7 +253,7 @@ label:focus-within {
 .fab-stack {
   position: fixed;
   right: 14px;
-  bottom: var(--page-bottom);
+  bottom: calc(var(--page-bottom) + var(--strip-h));
   z-index: 20;
   display: flex;
   flex-direction: column;
@@ -2031,4 +2032,304 @@ label:focus-within {
   font-weight: 700;
   color: var(--ink);
   text-decoration: none;
+}
+
+/* 숨김 상태의 시트 (지도에서 위치 고르는 동안 제보 입력 보존) */
+.sheet-backdrop[hidden] {
+  display: none;
+}
+
+/* ─── 지도 필터 칩 ─── */
+.filter-row {
+  display: flex;
+  gap: 6px;
+  max-width: min(100%, 420px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 2px;
+}
+
+.filter-row::-webkit-scrollbar {
+  display: none;
+}
+
+.filter-chip {
+  flex-shrink: 0;
+  padding: 8px 13px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.filter-chip.on {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+}
+
+/* ─── 명소 카드 둘러보기 ─── */
+.spot-strip-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--page-bottom);
+  z-index: 19;
+  pointer-events: none;
+}
+
+.spot-strip-wrap > * {
+  pointer-events: auto;
+}
+
+.spot-count {
+  display: inline-block;
+  margin: 0 0 6px 14px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  background: rgba(255, 253, 249, 0.9);
+  box-shadow: var(--shadow-xs);
+}
+
+.spot-count b {
+  color: var(--accent-deep);
+}
+
+.spot-strip {
+  display: flex;
+  gap: 8px;
+  padding: 2px 14px 4px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 14px;
+  scrollbar-width: none;
+}
+
+.spot-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.spot-card {
+  flex: 0 0 236px;
+  scroll-snap-align: start;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px 8px 8px;
+  border-radius: 18px;
+  text-align: left;
+}
+
+.spot-card.on {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent), var(--shadow-md);
+}
+
+.spot-thumb {
+  flex-shrink: 0;
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  background: linear-gradient(160deg, #fffaf3, var(--accent-soft));
+}
+
+.spot-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.spot-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.spot-body b {
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.spot-body span {
+  font-size: 12px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.spot-empty {
+  margin: 0 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+
+/* ─── 첫 방문 안내 ─── */
+.onboard {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 28;
+  width: min(calc(100% - 40px), 340px);
+  padding: 20px 20px 16px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: drop-in 0.4s var(--ease);
+}
+
+.onboard b {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.onboard ol {
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--ink-2);
+}
+
+/* ─── 명소 상세: 길찾기·공유 ─── */
+.action-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: -4px;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 0;
+  border-radius: 14px;
+  background: var(--bg-2);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.action-btn:hover {
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+
+/* ─── 토스트 ─── */
+.toast-wrap {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: calc(16px + env(safe-area-inset-top));
+  z-index: 60;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.toast {
+  max-width: calc(100% - 32px);
+  padding: 12px 18px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: var(--shadow-lg);
+  animation: drop-in 0.3s var(--ease);
+}
+
+/* ─── 도감 바로가기 ─── */
+.section-nav {
+  position: sticky;
+  top: calc(-28px - env(safe-area-inset-top));
+  z-index: 3;
+  display: flex;
+  gap: 6px;
+  margin: 0 -18px;
+  padding: 10px 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.section-nav::-webkit-scrollbar {
+  display: none;
+}
+
+.section-nav button {
+  flex-shrink: 0;
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink-2);
+  background: var(--card);
+  border: 1px solid var(--line);
+}
+
+.section-nav button:hover {
+  border-color: var(--accent);
+  color: var(--accent-deep);
+}
+
+.anchor {
+  scroll-margin-top: 72px;
+}
+
+/* ─── 이벤트 캘린더 추가 버튼 ─── */
+.event-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.event-actions button,
+.event-actions a {
+  flex: 1;
+  padding: 8px 0;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--line);
+}
+
+.event-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.ics-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--bg-2);
+  font-size: 15px;
 }
