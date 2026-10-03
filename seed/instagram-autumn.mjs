@@ -6,9 +6,17 @@
 //         인스타에 로그인하거나 접속하지 않아도 정확한 업로드 날짜를 알 수 있다.
 // 한 명소에 게시물이 여러 개면 기간 안의 가장 최근 게시물을 출처로 쓴다.
 // 저작권: 게시물의 사진·글은 가져오지 않고 원문 링크만 저장한다. 설명은 직접 쓴 일반 정보.
+// 출처 조건: 작성 계정 팔로워 5,000명 이상으로 확인된 게시물만(lib/instagram-verified.json).
+//          확인되지 않은 게시물은 출처로 쓰지 않고, 명소(실제 장소)만 남긴다.
 // 좌표는 명소 기준 근사값(±수백 m). node seed/instagram-autumn.mjs 로 실행.
 
 import { readFileSync, writeFileSync } from "fs";
+
+const verified = JSON.parse(readFileSync(new URL("../lib/instagram-verified.json", import.meta.url), "utf8"));
+const shortcode = (u) => u.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reel)\/([\w-]+)/)?.[1];
+const VERIFIED = new Set(
+  verified.posts.filter((p) => p.followers >= verified.minFollowers).map((p) => shortcode(p.url))
+);
 
 const WINDOWS = [
   ["2025-10-01", "2025-10-31"],
@@ -125,9 +133,12 @@ export function postedDate(url) {
 const inWindow = (d) => WINDOWS.some(([from, to]) => d >= from && d <= to);
 const q = (s) => `'${s.replace(/'/g, "''")}'`;
 
-let sql = `-- 2026년 9월 말 기준: 지금 시즌을 단풍으로 바꾸고 인스타그램 단풍 명소를 연결.
+const verifiedCodes = [...VERIFIED];
+
+let sql = `-- 2026년 가을: 지금 시즌을 단풍으로 바꾸고 단풍 명소를 정리.
 -- node seed/instagram-autumn.mjs 로 생성. Supabase SQL Editor에서 실행하세요. 중복 실행해도 안전합니다.
--- 출처 기간: 2025년 10월 게시물, 2026년 9월 21일 이후 게시물 (인스타그램만, 블로그 제외)
+-- 출처 조건: 인스타그램 게시물 중 작성 계정 팔로워 ${verified.minFollowers.toLocaleString()}명 이상으로 확인된 것만
+--           (lib/instagram-verified.json, 현재 ${verifiedCodes.length}건), 2025년 10월·2026년 9월 21일 이후 게시물
 
 alter table reports add column if not exists source_url text;
 alter table reports add column if not exists source_posted_at date;
@@ -135,18 +146,21 @@ alter table reports add column if not exists source_posted_at date;
 -- 1) 지금 시즌 = 단풍·은행
 update seasons set is_active = (flower_name = '단풍·은행');
 
--- 2) 단풍 제보에 남아 있는 블로그·기사 링크 제거
+-- 2) 확인되지 않은 출처 링크 전부 제거 (블로그·기사, 팔로워 미확인 인스타 게시물; 모든 시즌)
 update reports set source_url = null, source_posted_at = null
-where season_id = (select id from seasons where flower_name = '단풍·은행')
-  and source_url is not null and source_url not like '%instagram.com%';
+where source_url is not null${
+  verifiedCodes.length
+    ? `\n  and coalesce(substring(source_url from '/(?:p|reel)/([A-Za-z0-9_-]+)'), '') not in (${verifiedCodes.map((c) => q(c)).join(", ")})`
+    : ""
+};
 
--- 3) 9월 말은 아직 물드는 중: 운영자 시드의 상태를 '물드는 중'으로
+-- 3) 아직 물드는 중: 운영자·SNS 시드("이름 — 설명")의 상태를 '물드는 중'으로
 update reports set bloom_state = 'blooming'
 where season_id = (select id from seasons where flower_name = '단풍·은행')
   and bloom_state = 'full'
-  and (memo like '%(운영자 추천)' or source_url is not null);
+  and memo like '% — %';
 
--- 명소 이름으로 기존 제보를 찾아 출처를 붙이고, 없으면 새로 추가
+-- 명소 이름으로 기존 제보를 찾아 갱신하고, 없으면 새로 추가 (출처가 없으면 링크 없이)
 create or replace function _ig_autumn(p_name text, p_lat float8, p_lng float8, p_memo text, p_url text, p_posted date)
 returns void language plpgsql as $$
 declare
@@ -162,47 +176,37 @@ end $$;
 
 `;
 
-const picked = [];
+const linked = [];
+const placeOnly = [];
 const skipped = [];
 for (const [name, lat, lng, desc, urls] of SPOTS) {
   const dated = urls.map((u) => ({ url: u, date: postedDate(u) }));
-  const ok = dated.filter((p) => inWindow(p.date)).sort((a, b) => b.date.localeCompare(a.date));
-  if (ok.length === 0) {
+  const inRange = dated.filter((p) => inWindow(p.date)).sort((a, b) => b.date.localeCompare(a.date));
+  if (inRange.length === 0) {
     skipped.push({ name, dated });
     continue;
   }
-  const { url, date } = ok[0];
-  picked.push({ name, date });
-  sql += `select _ig_autumn(${q(name)}, ${lat}, ${lng}, ${q(`${name} — ${desc}`)}, ${q(url)}, '${date}');\n`;
+  const ok = inRange.find((p) => VERIFIED.has(shortcode(p.url)));
+  const memo = q(`${name} — ${desc}`);
+  if (ok) {
+    linked.push({ name, date: ok.date });
+    sql += `select _ig_autumn(${q(name)}, ${lat}, ${lng}, ${memo}, ${q(ok.url)}, '${ok.date}');\n`;
+  } else {
+    placeOnly.push(name);
+    sql += `select _ig_autumn(${q(name)}, ${lat}, ${lng}, ${memo}, null, null);\n`;
+  }
 }
 
 sql += `\ndrop function _ig_autumn(text, float8, float8, text, text, date);\n`;
 
-// 이전에 연결해 둔 인스타 링크(다른 꽃 포함)에도 게시일을 채워 팝업에 표시
-const earlier = [
-  ...new Set(
-    readFileSync(new URL("../supabase/instagram-links.sql", import.meta.url), "utf8").match(
-      /https:\/\/www\.instagram\.com\/(?:p|reel)\/[\w-]+\//g
-    )
-  ),
-];
-sql += `\n-- 4) 기존 인스타 링크의 게시일 채우기\n`;
-for (const url of earlier) {
-  sql += `update reports set source_posted_at = '${postedDate(url)}' where source_url = ${q(url)} and source_posted_at is null;\n`;
-}
-
 if (skipped.length) {
-  sql += `\n-- 기간 밖이라 제외한 명소 (게시물을 더 찾으면 seed/instagram-autumn.mjs에 추가 후 재생성)\n`;
-  for (const { name, dated } of skipped) {
-    sql += `--   ${name}: ${dated.map((p) => p.date).join(", ")}\n`;
-  }
+  sql += `\n-- 기간 밖이라 제외한 명소\n`;
+  for (const { name, dated } of skipped) sql += `--   ${name}: ${dated.map((p) => p.date).join(", ")}\n`;
 }
 
-sql += `\n-- 확인용\nselect memo, bloom_state, source_posted_at, source_url from reports r
-join seasons s on r.season_id = s.id
-where s.flower_name = '단풍·은행' and source_url is not null order by source_posted_at desc;\n`;
+sql += `\n-- 확인용: 남아 있는 출처 링크 (확인된 게시물만 있어야 함)\nselect memo, source_posted_at, source_url from reports where source_url is not null order by source_posted_at desc;\n`;
 
 writeFileSync(new URL("../supabase/autumn-2026.sql", import.meta.url), sql);
-console.log(`연결 ${picked.length}곳, 기간 밖 제외 ${skipped.length}곳`);
-for (const p of picked) console.log(`  ✓ ${p.date} ${p.name}`);
-for (const s of skipped) console.log(`  – ${s.name} (${s.dated.map((p) => p.date).join(", ")})`);
+console.log(`출처 연결 ${linked.length}곳, 명소만(출처 미확인) ${placeOnly.length}곳, 기간 밖 제외 ${skipped.length}곳`);
+for (const p of linked) console.log(`  ✓ ${p.date} ${p.name}`);
+for (const n of placeOnly) console.log(`  · ${n} (팔로워 미확인 → 링크 없이)`);

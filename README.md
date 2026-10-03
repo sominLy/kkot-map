@@ -51,6 +51,7 @@ update seasons set is_active = (flower_name = '단풍·은행');
 node seed/instagram-autumn.mjs   # → supabase/autumn-2026.sql
 ```
 
+- **출처 조건: 작성 계정 팔로워 5,000명 이상으로 확인된 게시물만** 씁니다. 확인한 게시물을 `lib/instagram-verified.json`에 `{ url, account, followers, checkedAt }`로 넣으면 앱과 SQL 생성기가 함께 그 목록만 출처로 인정해요. 목록에 없는 링크는 화면에 보이지 않습니다.
 - 게시일은 인스타 shortcode에서 계산합니다(로그인·접속 불필요).
 - 기간 필터: 2025년은 10월 게시물, 2026년은 9월 21일 이후 게시물만 사용합니다.
 

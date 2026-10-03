@@ -284,7 +284,7 @@ export default function FlowerMap() {
     { id: "blooming", label: `${copy.stateEmoji.blooming} ${copy.state.blooming}` },
     { id: "full", label: `${copy.stateEmoji.full} ${copy.state.full}` },
     { id: "sns", label: "📸 인스타 화제" },
-  ];
+  ].filter((f) => f.id !== "sns" || reports.some((r) => r.source_url)) as { id: Filter; label: string }[];
   const isViewingActive = viewSeason?.id === activeSeason?.id;
   const news = viewSeason && isFoliage(viewSeason) ? foliageHeadline() : null;
 
