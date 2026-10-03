@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import verified from "./instagram-verified.json";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -41,15 +42,28 @@ export type Report = {
   created_at: string;
 };
 
-/** 출처는 인스타그램 게시물만 보여준다. 예전 시드에 남은 블로그·기사 링크는 null로. */
+// 팔로워 5,000명 이상으로 확인된 계정의 게시물만 출처로 보여준다 (lib/instagram-verified.json)
+const VERIFIED = new Set(
+  (verified.posts as { url: string; followers: number }[])
+    .filter((p) => p.followers >= verified.minFollowers)
+    .map((p) => normalizeIg(p.url))
+);
+
+function normalizeIg(url: string) {
+  const m = url.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reel)\/([\w-]+)/);
+  return m ? m[1] : url;
+}
+
+/** 출처는 확인된 인스타그램 게시물만. 블로그·기사 링크와 미확인 게시물은 null. */
 export function instagramOnly(url: string | null | undefined): string | null {
   if (!url) return null;
   try {
     const host = new URL(url).hostname;
-    return host === "instagram.com" || host.endsWith(".instagram.com") ? url : null;
+    if (host !== "instagram.com" && !host.endsWith(".instagram.com")) return null;
   } catch {
     return null;
   }
+  return VERIFIED.has(normalizeIg(url)) ? url : null;
 }
 
 export function withInstagramSource(r: Report): Report {

@@ -1,0 +1,5 @@
+{
+  "_설명": "작성 계정의 팔로워가 5,000명 이상인지 사람이 확인한 인스타 게시물만 넣는다. 형식: { \"url\": \"https://www.instagram.com/p/코드/\", \"account\": \"계정\", \"followers\": 12000, \"checkedAt\": \"YYYY-MM-DD\" }",
+  "minFollowers": 5000,
+  "posts": []
+}
