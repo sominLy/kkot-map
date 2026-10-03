@@ -11,17 +11,13 @@
 // 좌표는 명소 기준 근사값(±수백 m). node seed/instagram-autumn.mjs 로 실행.
 
 import { readFileSync, writeFileSync } from "fs";
+import { inWindow, postedDate, shortcode } from "./ig-date.mjs";
 
 const verified = JSON.parse(readFileSync(new URL("../lib/instagram-verified.json", import.meta.url), "utf8"));
-const shortcode = (u) => u.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reel)\/([\w-]+)/)?.[1];
+const collected = JSON.parse(readFileSync(new URL("./instagram-collected.json", import.meta.url), "utf8"));
 const VERIFIED = new Set(
   verified.posts.filter((p) => p.followers >= verified.minFollowers).map((p) => shortcode(p.url))
 );
-
-const WINDOWS = [
-  ["2025-10-01", "2025-10-31"],
-  ["2026-09-21", "9999-12-31"],
-];
 
 // [명소 이름, 위도, 경도, 한 줄 설명, 후보 게시물 URL들]
 // 이름이 기존 제보 memo의 앞부분과 같으면 새로 만들지 않고 그 제보에 출처를 붙인다.
@@ -118,20 +114,18 @@ const SPOTS = [
   ]],
 ];
 
-const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
-const IG_EPOCH_MS = 1314220021721n;
-
-/** 인스타 URL → 게시일 (KST, YYYY-MM-DD) */
-export function postedDate(url) {
-  const code = url.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reel)\/([\w-]+)/)[1].slice(0, 11);
-  let id = 0n;
-  for (const c of code) id = id * 64n + BigInt(ALPHA.indexOf(c));
-  const ms = Number((id >> 23n) + IG_EPOCH_MS);
-  return new Date(ms + 9 * 3600e3).toISOString().slice(0, 10);
-}
-
-const inWindow = (d) => WINDOWS.some(([from, to]) => d >= from && d <= to);
 const q = (s) => `'${s.replace(/'/g, "''")}'`;
+
+// 사진 계정에서 찾은 게시물(seed/instagram-collected.json)을 후보에 합친다.
+// 이름이 같은 명소가 있으면 그 후보 목록에, 없으면 새 명소로 추가.
+for (const p of collected.posts) {
+  const spot = SPOTS.find(([name]) => name === p.spot);
+  if (spot) {
+    if (!spot[4].some((u) => shortcode(u) === shortcode(p.url))) spot[4].push(p.url);
+  } else {
+    SPOTS.push([p.spot, p.lat, p.lng, p.desc, [p.url]]);
+  }
+}
 
 const verifiedCodes = [...VERIFIED];
 
