@@ -96,3 +96,23 @@ export function timeAgo(date: string | Date, now = new Date()): string {
 export function dotDate(date: string): string {
   return date.slice(0, 10).replace(/-/g, ".");
 }
+
+// 달마다 제철인 시즌(앞에 있을수록 우선). DB의 is_active가 철 지난 시즌이면 이걸로 고른다.
+const SEASON_BY_MONTH: Record<number, string[]> = {
+  1: ["동백"], 2: ["매화", "동백"], 3: ["벚꽃", "매화", "개나리"], 4: ["벚꽃", "튤립", "철쭉"],
+  5: ["장미", "작약", "이팝나무"], 6: ["수국", "장미"], 7: ["능소화", "수국", "연꽃"],
+  8: ["능소화", "해바라기", "배롱나무"], 9: ["꽃무릇", "코스모스", "핑크뮬리"],
+  10: ["단풍·은행", "핑크뮬리", "억새"], 11: ["단풍·은행", "억새", "국화"], 12: ["동백"],
+};
+
+/** DB가 지정한 시즌이 지금 철이면 그대로, 아니면 이번 달 제철 시즌을 고른다. */
+export function pickActiveSeason(seasons: Season[], now = new Date()): Season {
+  const wanted = SEASON_BY_MONTH[now.getMonth() + 1] ?? [];
+  const dbActive = seasons.find((s) => s.is_active);
+  if (dbActive && wanted.includes(dbActive.flower_name)) return dbActive;
+  for (const name of wanted) {
+    const hit = seasons.find((s) => s.flower_name === name);
+    if (hit) return hit;
+  }
+  return dbActive ?? seasons[0];
+}

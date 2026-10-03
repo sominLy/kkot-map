@@ -5,7 +5,7 @@ import { supabase, type Report, type Season } from "@/lib/supabase";
 import { addMyReportId } from "@/lib/myReports";
 import { bumpStat, collectFlower } from "@/lib/game";
 import { dday, foliageHeadline } from "@/lib/content";
-import { applyTheme, copyFor, isFoliage, splitMemo } from "@/lib/theme";
+import { applyTheme, copyFor, isFoliage, pickActiveSeason, splitMemo } from "@/lib/theme";
 import { toast } from "@/lib/toast";
 import { useEscape } from "@/lib/useEscape";
 import CardModal from "./CardModal";
@@ -131,7 +131,7 @@ export default function FlowerMap() {
         return;
       }
       setSeasons(data);
-      const active = data.find((s: Season) => s.is_active) ?? data[0];
+      const active = pickActiveSeason(data);
       setActiveSeason(active);
       // 공유 링크의 제보가 다른 시즌이면 그 시즌을 연다
       let view = active;
@@ -455,7 +455,7 @@ export default function FlowerMap() {
                 >
                   <span>{s.emoji}</span>
                   {s.flower_name}
-                  {s.is_active && <em>NOW</em>}
+                  {s.id === activeSeason?.id && <em>NOW</em>}
                 </button>
               ))}
             </div>

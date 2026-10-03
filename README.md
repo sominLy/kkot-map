@@ -33,6 +33,8 @@ npm run dev
 
 ## 시즌 바꾸기
 
+앱이 날짜를 보고 그달 제철 시즌을 자동으로 고릅니다(10~11월 단풍·은행, 3~4월 벚꽃 등, `lib/theme.ts`의 `pickActiveSeason`). DB의 `is_active` 시즌이 지금 철이면 그걸 우선합니다. 직접 지정하려면:
+
 Supabase 테이블 편집기에서 `seasons`의 `is_active`를 옮기면 됩니다.
 
 ```sql
