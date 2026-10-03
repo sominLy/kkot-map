@@ -45,10 +45,11 @@ update seasons set is_active = (flower_name = '단풍·은행');
 
 ## 인스타그램 명소 추가하기
 
-`seed/instagram-autumn.mjs`의 후보 목록에 게시물 URL을 넣고 실행하면 SQL이 다시 만들어집니다.
+사진 계정에서 찾은 게시물은 `seed/instagram-collected.json`에 넣고 검사기로 확인합니다. 자세한 방법과 로컬 Claude용 프롬프트: [docs/instagram-collect.md](docs/instagram-collect.md)
 
 ```bash
-node seed/instagram-autumn.mjs   # → supabase/autumn-2026.sql
+node seed/ig-check.mjs --apply    # 검사 후 통과한 게시물만 반영
+node seed/instagram-autumn.mjs    # → supabase/autumn-2026.sql
 ```
 
 - **출처 조건: 작성 계정 팔로워 5,000명 이상으로 확인된 게시물만** 씁니다. 확인한 게시물을 `lib/instagram-verified.json`에 `{ url, account, followers, checkedAt }`로 넣으면 앱과 SQL 생성기가 함께 그 목록만 출처로 인정해요. 목록에 없는 링크는 화면에 보이지 않습니다.

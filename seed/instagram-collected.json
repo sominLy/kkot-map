@@ -1,0 +1,4 @@
+{
+  "_설명": "사진 계정에서 직접 찾은 단풍 게시물. docs/instagram-collect.md 참고. node seed/ig-check.mjs 로 검사하고, --apply 로 lib/instagram-verified.json에 반영한다.",
+  "posts": []
+}
