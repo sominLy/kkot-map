@@ -12,6 +12,7 @@
 
 import { readFileSync, writeFileSync } from "fs";
 import { inWindow, postedDate, shortcode } from "./ig-date.mjs";
+import { screen } from "./ig-rules.mjs";
 
 const verified = JSON.parse(readFileSync(new URL("../lib/instagram-verified.json", import.meta.url), "utf8"));
 const collected = JSON.parse(readFileSync(new URL("./instagram-collected.json", import.meta.url), "utf8"));
@@ -117,14 +118,21 @@ const SPOTS = [
 const q = (s) => `'${s.replace(/'/g, "''")}'`;
 
 // 사진 계정에서 찾은 게시물(seed/instagram-collected.json)을 후보에 합친다.
+// ig-check.mjs와 같은 규칙으로 다시 검사해서 통과한 것만 쓴다 (탈락 항목이 지도에 올라가지 않도록).
 // 이름이 같은 명소가 있으면 그 후보 목록에, 없으면 새 명소로 추가.
-for (const p of collected.posts) {
+const screened = screen(collected.posts, verified.minFollowers);
+for (const { post: p } of screened.ok) {
   const spot = SPOTS.find(([name]) => name === p.spot);
   if (spot) {
     if (!spot[4].some((u) => shortcode(u) === shortcode(p.url))) spot[4].push(p.url);
   } else {
     SPOTS.push([p.spot, p.lat, p.lng, p.desc, [p.url]]);
   }
+}
+if (screened.bad.length) {
+  console.log(`수집 목록에서 검사 탈락 ${screened.bad.length}건은 건너뜀 (node seed/ig-check.mjs 로 이유 확인):`);
+  for (const { post: p, errs } of screened.bad) console.log(`  ✗ ${p.spot ?? "?"} ${p.url ?? ""} — ${errs[0]}`);
+  console.log("");
 }
 
 const verifiedCodes = [...VERIFIED];

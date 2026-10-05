@@ -1,4 +1,85 @@
 {
   "_설명": "사진 계정에서 직접 찾은 단풍 게시물. docs/instagram-collect.md 참고. node seed/ig-check.mjs 로 검사하고, --apply 로 lib/instagram-verified.json에 반영한다.",
-  "posts": []
+  "posts": [
+    {
+      "url": "https://www.instagram.com/foto_ycy/p/DPoGJnfiT4E/",
+      "account": "foto_ycy",
+      "followers": 475000,
+      "checkedAt": "2026-10-05",
+      "spot": "괴산 문광저수지 은행나무길",
+      "lat": 36.79,
+      "lng": 127.745,
+      "desc": "저수지 둑길을 따라 늘어선 은행나무"
+    },
+    {
+      "url": "https://www.instagram.com/siniple/p/DPtFx7OEg-9/",
+      "account": "siniple",
+      "followers": 167000,
+      "checkedAt": "2026-10-05",
+      "spot": "원주 반계리 은행나무",
+      "lat": 37.353,
+      "lng": 127.8445,
+      "desc": "천연기념물 노거수, 늦가을 노랗게 물든다"
+    },
+    {
+      "url": "https://www.instagram.com/foto_ycy/p/DQeN1lKCVth/",
+      "account": "foto_ycy",
+      "followers": 475000,
+      "checkedAt": "2026-10-05",
+      "spot": "청주 청남대",
+      "lat": 36.4622,
+      "lng": 127.4904,
+      "desc": "대청호 옆 옛 별장, 단풍과 메타세쿼이아길"
+    },
+    {
+      "url": "https://www.instagram.com/foto_ycy/p/DQT03LdCZ8n/",
+      "account": "foto_ycy",
+      "followers": 475000,
+      "checkedAt": "2026-10-05",
+      "spot": "옥천 수생식물학습원",
+      "lat": 36.3914,
+      "lng": 127.5531,
+      "desc": "대청호를 내려다보는 수생식물 정원"
+    },
+    {
+      "url": "https://www.instagram.com/foto_ycy/reel/DQRPJB9CTx0/",
+      "account": "foto_ycy",
+      "followers": 475000,
+      "checkedAt": "2026-10-05",
+      "spot": "광주 우일선 선교사 사택",
+      "lat": 35.1387,
+      "lng": 126.9124,
+      "desc": "양림동 근대 건축물, 은행나무와 메타세쿼이아"
+    },
+    {
+      "url": "https://www.instagram.com/foto_ycy/reel/DPydRaDiTEm/",
+      "account": "foto_ycy",
+      "followers": 475000,
+      "checkedAt": "2026-10-05",
+      "spot": "원주 연세대 미래캠퍼스",
+      "lat": 37.2801,
+      "lng": 127.9015,
+      "desc": "흥업면 캠퍼스를 가로지르는 은행나무길"
+    },
+    {
+      "url": "https://www.instagram.com/siniple/p/DPnzbvPEv6y/",
+      "account": "siniple",
+      "followers": 167000,
+      "checkedAt": "2026-10-05",
+      "spot": "용인 한국외대 글로벌캠퍼스",
+      "lat": 37.3367,
+      "lng": 127.2659,
+      "desc": "명수당 둘레의 메타세쿼이아 단풍길"
+    },
+    {
+      "url": "https://www.instagram.com/siniple/p/DQYzREdkngk/",
+      "account": "siniple",
+      "followers": 167000,
+      "checkedAt": "2026-10-05",
+      "spot": "하남 미사경정공원",
+      "lat": 37.5624,
+      "lng": 127.2026,
+      "desc": "한강 옆 잔디밭, 은행나무와 핑크뮬리"
+    }
+  ]
 }

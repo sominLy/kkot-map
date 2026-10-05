@@ -1,7 +1,7 @@
 -- 2026년 가을: 지금 시즌을 단풍으로 바꾸고 단풍 명소를 정리.
 -- node seed/instagram-autumn.mjs 로 생성. Supabase SQL Editor에서 실행하세요. 중복 실행해도 안전합니다.
 -- 출처 조건: 인스타그램 게시물 중 작성 계정 팔로워 5,000명 이상으로 확인된 것만
---           (lib/instagram-verified.json, 현재 0건), 2025년 10월·2026년 9월 21일 이후 게시물
+--           (lib/instagram-verified.json, 현재 8건), 2025년 10월·2026년 9월 21일 이후 게시물
 
 alter table reports add column if not exists source_url text;
 alter table reports add column if not exists source_posted_at date;
@@ -11,7 +11,8 @@ update seasons set is_active = (flower_name = '단풍·은행');
 
 -- 2) 확인되지 않은 출처 링크 전부 제거 (블로그·기사, 팔로워 미확인 인스타 게시물; 모든 시즌)
 update reports set source_url = null, source_posted_at = null
-where source_url is not null;
+where source_url is not null
+  and coalesce(substring(source_url from '/(?:p|reel)/([A-Za-z0-9_-]+)'), '') not in ('DPoGJnfiT4E', 'DPtFx7OEg-9', 'DQeN1lKCVth', 'DQT03LdCZ8n', 'DQRPJB9CTx0', 'DPydRaDiTEm', 'DPnzbvPEv6y', 'DQYzREdkngk');
 
 -- 3) 아직 물드는 중: 운영자·SNS 시드("이름 — 설명")의 상태를 '물드는 중'으로
 update reports set bloom_state = 'blooming'
@@ -34,8 +35,8 @@ begin
 end $$;
 
 select _ig_autumn('광주 곤지암 화담숲', 37.341, 127.293, '광주 곤지암 화담숲 — 곤지암 산자락을 따라 조성된 단풍 수목원', null, null);
-select _ig_autumn('원주 반계리 은행나무', 37.353, 127.8445, '원주 반계리 은행나무 — 천연기념물 노거수, 늦가을 노랗게 물드는 은행나무', null, null);
-select _ig_autumn('괴산 문광저수지 은행나무길', 36.79, 127.745, '괴산 문광저수지 은행나무길 — 저수지 둑길을 따라 늘어선 은행나무', null, null);
+select _ig_autumn('원주 반계리 은행나무', 37.353, 127.8445, '원주 반계리 은행나무 — 천연기념물 노거수, 늦가을 노랗게 물드는 은행나무', 'https://www.instagram.com/siniple/p/DPtFx7OEg-9/', '2025-10-12');
+select _ig_autumn('괴산 문광저수지 은행나무길', 36.79, 127.745, '괴산 문광저수지 은행나무길 — 저수지 둑길을 따라 늘어선 은행나무', 'https://www.instagram.com/foto_ycy/p/DPoGJnfiT4E/', '2025-10-10');
 select _ig_autumn('아산 곡교천 은행나무길', 36.783, 126.98, '아산 곡교천 은행나무길 — 곡교천 강변을 따라 이어지는 은행나무 가로수', null, null);
 select _ig_autumn('경주 도리마을 은행나무숲', 35.874, 129.06, '경주 도리마을 은행나무숲 — 마을 안에 빽빽하게 심은 은행나무 숲', null, null);
 select _ig_autumn('홍천 은행나무숲', 37.842, 128.326, '홍천 은행나무숲 — 가을에만 개방하는 개인 은행나무 숲', null, null);
@@ -49,6 +50,12 @@ select _ig_autumn('주왕산 단풍', 36.393, 129.165, '주왕산 단풍 — 기
 select _ig_autumn('내장산 단풍', 35.498, 126.888, '내장산 단풍 — 우화정과 단풍나무 터널이 있는 국립공원', null, null);
 select _ig_autumn('대둔산 단풍', 36.123, 127.323, '대둔산 단풍 — 케이블카와 구름다리가 있는 암릉 산', null, null);
 select _ig_autumn('담양 메타세쿼이아길', 35.324, 126.991, '담양 메타세쿼이아길 — 늦가을 적갈색으로 물드는 가로수길', null, null);
+select _ig_autumn('청주 청남대', 36.4622, 127.4904, '청주 청남대 — 대청호 옆 옛 별장, 단풍과 메타세쿼이아길', 'https://www.instagram.com/foto_ycy/p/DQeN1lKCVth/', '2025-10-31');
+select _ig_autumn('옥천 수생식물학습원', 36.3914, 127.5531, '옥천 수생식물학습원 — 대청호를 내려다보는 수생식물 정원', 'https://www.instagram.com/foto_ycy/p/DQT03LdCZ8n/', '2025-10-27');
+select _ig_autumn('광주 우일선 선교사 사택', 35.1387, 126.9124, '광주 우일선 선교사 사택 — 양림동 근대 건축물, 은행나무와 메타세쿼이아', 'https://www.instagram.com/foto_ycy/reel/DQRPJB9CTx0/', '2025-10-26');
+select _ig_autumn('원주 연세대 미래캠퍼스', 37.2801, 127.9015, '원주 연세대 미래캠퍼스 — 흥업면 캠퍼스를 가로지르는 은행나무길', 'https://www.instagram.com/foto_ycy/reel/DPydRaDiTEm/', '2025-10-14');
+select _ig_autumn('용인 한국외대 글로벌캠퍼스', 37.3367, 127.2659, '용인 한국외대 글로벌캠퍼스 — 명수당 둘레의 메타세쿼이아 단풍길', 'https://www.instagram.com/siniple/p/DPnzbvPEv6y/', '2025-10-10');
+select _ig_autumn('하남 미사경정공원', 37.5624, 127.2026, '하남 미사경정공원 — 한강 옆 잔디밭, 은행나무와 핑크뮬리', 'https://www.instagram.com/siniple/p/DQYzREdkngk/', '2025-10-29');
 
 drop function _ig_autumn(text, float8, float8, text, text, date);
 
