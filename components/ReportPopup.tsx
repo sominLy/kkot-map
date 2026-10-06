@@ -87,7 +87,9 @@ export default function ReportPopup({
   async function flag(reason: "user" | "source-removal") {
     if (flagged) return;
     setFlagged(reason);
-    await supabase.from("flags").insert({ report_id: report.id, reason });
+    // 같은 사람의 중복 신고는 서버(flag_report)가 1건으로 친다
+    const { error } = await supabase.rpc("flag_report", { p_report_id: report.id, p_reason: reason });
+    if (error?.code === "PGRST202") await supabase.from("flags").insert({ report_id: report.id, reason });
   }
 
   const likes = (report.likes ?? 0) + (liked && !initialLiked ? 1 : 0);

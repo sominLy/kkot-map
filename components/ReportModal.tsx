@@ -113,6 +113,10 @@ export default function ReportModal({
           .select("id, created_at")
           .single());
       }
+      if (insErr?.message.includes("rate_limited"))
+        throw new Error("짧은 시간에 제보가 많았어요. 10분쯤 뒤에 다시 올려주세요");
+      if (insErr?.message.includes("out_of_range"))
+        throw new Error("국내 위치만 제보할 수 있어요. 지도에서 위치를 다시 골라주세요");
       if (insErr || !data) throw new Error("제보 저장에 실패했어요");
       onCreated({
         ...fields,
