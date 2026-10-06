@@ -3,6 +3,7 @@
 
 import { createHash, timingSafeEqual } from "crypto";
 import { createClient } from "@supabase/supabase-js";
+import { buildStats, type StatEvent, type StatReport } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,40 @@ async function authorized(req: Request): Promise<boolean> {
   return ok;
 }
 
+/** 1000행 제한을 넘어 전부 읽기 (최대 maxRows) */
+async function readAll<T>(
+  page: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  maxRows = 100_000
+): Promise<{ rows: T[]; error: string | null }> {
+  const rows: T[] = [];
+  for (let from = 0; from < maxRows; from += 1000) {
+    const { data, error } = await page(from, from + 999);
+    if (error) return { rows, error: error.message };
+    rows.push(...(data ?? []));
+    if (!data || data.length < 1000) break;
+  }
+  return { rows, error: null };
+}
+
+async function stats(db: Db, days: number) {
+  const reports = await readAll<StatReport>((a, b) => db.from("reports").select("*").order("id").range(a, b));
+  if (reports.error) throw new Error(reports.error);
+  // app_events는 analytics.sql 실행 전이면 없다 → 행동 지표만 비워 둔다
+  const events = await readAll<StatEvent>((a, b) =>
+    db.from("app_events").select("kind, report_id, label, created_at").order("id").range(a, b)
+  );
+  const { count: flags } = await db.from("flags").select("*", { count: "exact", head: true });
+  const { data: seasons } = await db.from("seasons").select("id, flower_name, emoji");
+  return buildStats({
+    reports: reports.rows,
+    events: events.error ? [] : events.rows,
+    analyticsReady: !events.error,
+    seasons: seasons ?? [],
+    flags: flags ?? 0,
+    days,
+  });
+}
+
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "cache-control": "no-store" } });
 
@@ -41,7 +76,16 @@ export async function GET(req: Request) {
   if (!db) return json({ error: "서버에 ADMIN_PASSWORD·SUPABASE_SERVICE_ROLE_KEY가 없어요" }, 503);
   if (!(await authorized(req))) return json({ error: "비밀번호가 맞지 않아요" }, 401);
 
-  const tab = new URL(req.url).searchParams.get("tab");
+  const params = new URL(req.url).searchParams;
+  const tab = params.get("tab");
+  if (tab === "stats") {
+    const days = [7, 30, 90].includes(Number(params.get("days"))) ? Number(params.get("days")) : 30;
+    try {
+      return json(await stats(db, days));
+    } catch (e) {
+      return json({ error: e instanceof Error ? e.message : "집계 실패" }, 500);
+    }
+  }
   const query =
     tab === "flagged"
       ? db.from("reports").select("*, flags(reason, created_at)").eq("hidden", true)

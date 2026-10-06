@@ -6,15 +6,16 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Report, Season } from "@/lib/supabase";
 import { splitMemo, timeAgo } from "@/lib/theme";
+import AdminDashboard from "@/components/AdminDashboard";
 
 type Row = Report & { flags?: { reason: string; created_at: string }[] };
-type Tab = "pending" | "flagged";
+type Tab = "dashboard" | "pending" | "flagged";
 const KEY = "kkotmap-admin-key";
 
 export default function AdminPage() {
   const [key, setKey] = useState("");
   const [input, setInput] = useState("");
-  const [tab, setTab] = useState<Tab>("pending");
+  const [tab, setTab] = useState<Tab>("dashboard");
   const [rows, setRows] = useState<Row[] | null>(null);
   const [seasons, setSeasons] = useState<Pick<Season, "id" | "flower_name" | "emoji">[]>([]);
   const [error, setError] = useState("");
@@ -27,7 +28,7 @@ export default function AdminPage() {
   }, []);
 
   const load = useCallback(async () => {
-    if (!key) return;
+    if (!key || tab === "dashboard") return;
     setError("");
     setRows(null);
     const res = await fetch(`/api/admin?tab=${tab}`, { headers: { "x-admin-key": key } });
@@ -105,14 +106,15 @@ export default function AdminPage() {
       <div className="page-inner">
         <header className="page-head">
           <p className="eyebrow">Admin</p>
-          <h1>제보 검수</h1>
+          <h1>꽃맵 운영</h1>
           <p>사진 제보는 승인해야 지도에 올라가요. 신고 3건이 쌓인 제보는 자동으로 숨겨져요.</p>
         </header>
 
-        <div className="segmented" role="tablist">
+        <div className="segmented admin-tabs" role="tablist">
           {(
             [
-              ["pending", "사진 검수 대기"],
+              ["dashboard", "대시보드"],
+              ["pending", "사진 검수"],
               ["flagged", "신고로 숨김"],
             ] as const
           ).map(([t, label]) => (
@@ -122,11 +124,12 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {error && <p className="admin-error">{error}</p>}
-        {rows === null && !error && <div className="skeleton" />}
-        {rows?.length === 0 && <p className="empty">처리할 제보가 없어요 🎉</p>}
+        {tab === "dashboard" && <AdminDashboard adminKey={key} />}
+        {tab !== "dashboard" && error && <p className="admin-error">{error}</p>}
+        {tab !== "dashboard" && rows === null && !error && <div className="skeleton" />}
+        {tab !== "dashboard" && rows?.length === 0 && <p className="empty">처리할 제보가 없어요 🎉</p>}
 
-        <div className="admin-list">
+        <div className="admin-list" hidden={tab === "dashboard"}>
           {rows?.map((r) => {
             const s = seasons.find((x) => x.id === r.season_id);
             const { title, desc } = splitMemo(r.memo);

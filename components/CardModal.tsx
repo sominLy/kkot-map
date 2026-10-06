@@ -1,5 +1,6 @@
 "use client";
 
+import { track } from "@/lib/track";
 import { useState } from "react";
 import { shareCard } from "@/lib/game";
 import { splitMemo } from "@/lib/theme";
@@ -24,6 +25,7 @@ export default function CardModal({
   useEscape(onClose);
 
   async function share() {
+    track("card_share", { label: flower });
     const result = await shareCard(flower, emoji, place);
     if (result === "copied") setShareMsg("클립보드에 복사됐어요. 친구에게 붙여넣어 보세요");
   }

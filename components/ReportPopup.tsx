@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { instagramOnly, supabase, type Report, type Season } from "@/lib/supabase";
 import { hasLiked, likeReport } from "@/lib/likes";
 import { bumpStat, collectFlower, hasVisited, markVisited } from "@/lib/game";
 import { copyFor, dotDate, splitMemo, timeAgo } from "@/lib/theme";
 import { toast } from "@/lib/toast";
+import { track } from "@/lib/track";
 import { useEscape } from "@/lib/useEscape";
 import Icon from "./Icon";
 
@@ -36,7 +37,12 @@ export default function ReportPopup({
   // 카카오맵 길찾기 URL 스킴: /link/to/이름,위도,경도
   const directionsUrl = `https://map.kakao.com/link/to/${encodeURIComponent(placeName)},${report.lat},${report.lng}`;
 
+  useEffect(() => {
+    track("open_report", { reportId: report.id });
+  }, [report.id]);
+
   async function share() {
+    track("share", { reportId: report.id });
     const url = `${location.origin}/?spot=${report.id}`;
     const text = `${season.emoji} ${placeName} — 꽃맵에서 보기`;
     if (navigator.share) {
@@ -126,7 +132,13 @@ export default function ReportPopup({
         </div>
 
         <div className="action-row">
-          <a className="action-btn" href={directionsUrl} target="_blank" rel="noreferrer noopener">
+          <a
+            className="action-btn"
+            href={directionsUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            onClick={() => track("directions", { reportId: report.id })}
+          >
             <Icon name="pin" size={18} />
             길찾기
           </a>
