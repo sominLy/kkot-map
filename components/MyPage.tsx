@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase, type Report, type Season } from "@/lib/supabase";
-import { getMyReportIds } from "@/lib/myReports";
+import { getMyPendingCopies, getMyReportIds } from "@/lib/myReports";
 import { FLOWER_SEASONS } from "@/lib/content";
 import { copyFor, splitMemo } from "@/lib/theme";
 import {
@@ -18,6 +18,13 @@ import Icon from "./Icon";
 const ALL_FLOWERS = FLOWER_SEASONS.flatMap((s) =>
   s.flowers.map((f) => ({ name: f.name, emoji: f.emoji }))
 ).filter((f, i, arr) => arr.findIndex((x) => x.name === f.name) === i);
+
+// 지도에 아직 안 보이는 내 제보의 상태 표시
+const REVIEW_LABEL: Record<NonNullable<Report["status"]>, string | null> = {
+  pending: "확인 중",
+  rejected: "미노출",
+  approved: null,
+};
 
 export default function MyPage({
   seasons,
@@ -41,12 +48,28 @@ export default function MyPage({
       setMine([]);
       return;
     }
-    supabase
-      .from("reports")
-      .select("*")
-      .in("id", ids)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => setMine(data ?? []));
+    (async () => {
+      const { data } = await supabase
+        .from("reports")
+        .select("*")
+        .in("id", ids)
+        .order("created_at", { ascending: false });
+      const approved: Report[] = data ?? [];
+      // 지도에 아직 없는 사진 제보는 이 브라우저의 사본 + 서버의 검수 상태로 보여준다
+      const copies = getMyPendingCopies().filter((c) => !approved.some((a) => a.id === c.id));
+      let rest = copies;
+      if (copies.length) {
+        const { data: st } = await supabase.rpc("report_status", { p_ids: copies.map((c) => c.id) });
+        const byId = new Map(
+          ((st ?? []) as { id: number; status: Report["status"]; hidden: boolean }[]).map((s) => [s.id, s])
+        );
+        rest = copies.map((c) => {
+          const s = byId.get(c.id);
+          return { ...c, status: s?.hidden ? "rejected" : (s?.status ?? "pending") };
+        });
+      }
+      setMine([...rest, ...approved].sort((a, b) => b.created_at.localeCompare(a.created_at)));
+    })();
   }, []);
 
   const title = stats ? getTitle(stats) : null;
@@ -158,8 +181,14 @@ export default function MyPage({
             {mine.map((r) => {
               const season = seasons.find((s) => s.id === r.season_id) ?? null;
               const copy = copyFor(season);
+              const review = REVIEW_LABEL[r.status ?? "approved"];
               return (
-                <button key={r.id} className="row" onClick={() => onShowOnMap(r)}>
+                <button
+                  key={r.id}
+                  className="row"
+                  disabled={!!review}
+                  onClick={() => onShowOnMap(r)}
+                >
                   <span className="collection-emoji">{season?.emoji ?? "🌸"}</span>
                   <span className="row-body">
                     <span className="row-title">{splitMemo(r.memo).title || "(메모 없음)"}</span>
@@ -168,13 +197,21 @@ export default function MyPage({
                       · {copy.freshCount} {r.fresh_votes}
                     </span>
                   </span>
-                  <Icon name="chevronRight" size={18} className="row-go" />
+                  {review ? (
+                    <span className={`review-badge ${r.status}`}>{review}</span>
+                  ) : (
+                    <Icon name="chevronRight" size={18} className="row-go" />
+                  )}
                 </button>
               );
             })}
           </section>
         )}
-        <p className="disclaimer">내 제보는 이 브라우저에만 기억돼요 (로그인 없는 익명 서비스라서요).</p>
+        <p className="disclaimer">
+          내 제보는 이 브라우저에만 기억돼요 (로그인 없는 익명 서비스라서요). 사진이 있는 제보는
+          운영자가 확인한 뒤 지도에 올라가요. 꽃과 관계없거나 사람이 알아볼 수 있는 사진은 올라가지
+          않아요(미노출).
+        </p>
       </div>
     </div>
   );

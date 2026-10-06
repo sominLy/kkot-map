@@ -39,6 +39,8 @@ export type Report = {
   source_url: string | null;
   source_posted_at?: string | null;
   hidden: boolean;
+  /** 검수 상태. 사진 제보는 운영자 승인 전까지 pending (supabase/moderation.sql) */
+  status?: "pending" | "approved" | "rejected";
   created_at: string;
 };
 

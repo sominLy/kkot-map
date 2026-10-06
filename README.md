@@ -12,7 +12,8 @@
 - **EXIF 제거**: 캔버스 재인코딩으로 사진 속 GPS·촬영시각 메타데이터를 완전 삭제
 - **좌표 뭉개기**: 핀 위치를 소수 4자리(~11m)로 반올림해 특정 주택 지목 방지
 - **수정·삭제 불가 RLS**: 익명 사용자는 읽기+제보만 가능, 남의 제보를 조작할 수 없음
-- **신고 기능**: 부적절한 제보는 신고 → `hidden` 처리로 숨김
+- **사진 1차 검수**: 사진이 있는 제보는 운영자가 `/admin`에서 승인해야 지도에 보임. 거절하면 사진 파일도 삭제
+- **신고 기능**: 신고 3건이 쌓이면 자동으로 숨김 → 운영자가 복구하거나 삭제 확정
 - **SNS 출처는 링크만**: 인스타그램 게시물의 사진·글은 가져오지 않고 원문 링크와 게시일만 저장. 게시자는 링크 삭제를 요청할 수 있음
 
 ## 시작하기
@@ -23,9 +24,13 @@
    2. `supabase/RUN_ME.sql` (좋아요·방문, 전국 명소 333곳, SNS 화제 명소)
    3. `supabase/instagram-links.sql` (인스타 출처 링크)
    4. `supabase/autumn-2026.sql` (단풍 시즌 전환 + 인스타 단풍 명소)
+   5. `supabase/moderation.sql` (사진 제보 검수 · 신고 3건 자동 숨김 · 사진 jpeg 2MB 제한)
 3. `.env.local`에 `NEXT_PUBLIC_NAVER_MAP_CLIENT_ID`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` 채우기
    - Vercel에서는 Production뿐 아니라 **Preview**에도 같은 변수를 넣어야 브랜치 미리보기에서 데이터가 보여요. 없으면 화면만 뜨고 제보는 비어 보입니다.
-4. 실행:
+4. 운영자 검수(`/admin`)를 쓰려면 Vercel 환경변수에 두 개를 더 넣어요. **둘 다 `NEXT_PUBLIC_`을 붙이지 마세요** (브라우저로 나가면 안 되는 값).
+   - `SUPABASE_SERVICE_ROLE_KEY`: Supabase → Project Settings → API → `service_role` 키
+   - `ADMIN_PASSWORD`: 검수 화면 비밀번호 (길고 추측하기 어렵게)
+5. 실행:
 
 ```bash
 npm run dev

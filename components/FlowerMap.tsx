@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase, withInstagramSource, type Report, type Season } from "@/lib/supabase";
-import { addMyReportId } from "@/lib/myReports";
+import { addMyPendingCopy, addMyReportId } from "@/lib/myReports";
 import { bumpStat, collectFlower } from "@/lib/game";
 import { dday, foliageHeadline } from "@/lib/content";
 import { applyTheme, copyFor, isFoliage, pickActiveSeason, splitMemo } from "@/lib/theme";
@@ -494,11 +494,16 @@ export default function FlowerMap() {
             bumpStat("reports");
             const isNew = collectFlower(activeSeason.flower_name, activeSeason.emoji);
             setViewSeason(activeSeason);
-            setReports((prev) => [r, ...prev]);
             setReporting(false);
             setDraftPos(null);
-            showOnMap(r);
-            toast("제보를 올렸어요. 고마워요!");
+            if (r.status === "pending") {
+              addMyPendingCopy(r);
+              toast("사진 제보는 확인 후 지도에 올라가요. 마이에서 상태를 볼 수 있어요");
+            } else {
+              setReports((prev) => [r, ...prev]);
+              showOnMap(r);
+              toast("제보를 올렸어요. 고마워요!");
+            }
             setEarnedCard({
               flower: activeSeason.flower_name,
               emoji: activeSeason.emoji,
