@@ -2390,3 +2390,98 @@ label:focus-within {
   border-radius: 999px;
   padding: 4px 10px;
 }
+
+/* 내 제보 검수 상태 */
+.row:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.review-badge {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 4px 9px;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+}
+.review-badge.rejected {
+  background: #f1efec;
+  color: var(--ink-faint);
+}
+
+/* 운영자 검수 */
+.page.admin {
+  position: static;
+  min-height: 100dvh;
+  padding-bottom: 48px;
+}
+.admin-login {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+}
+.admin-login input {
+  font: inherit;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+.admin-error {
+  color: #b3261e;
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+.admin-item {
+  overflow: hidden;
+}
+.admin-item img,
+.admin-nophoto {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: contain;
+  background: #f1efec;
+}
+.admin-nophoto {
+  padding: 24px;
+  text-align: center;
+  color: var(--ink-faint);
+  font-size: 13px;
+}
+.admin-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px 16px;
+}
+.admin-body .row-meta {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+}
+.admin-flags {
+  margin: 4px 0 0;
+  padding-left: 16px;
+  font-size: 12.5px;
+  color: #b3261e;
+}
+.admin-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.admin-actions .btn {
+  flex: 1;
+}
+.admin-logout {
+  margin-top: 20px;
+  width: 100%;
+}

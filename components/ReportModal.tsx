@@ -86,20 +86,44 @@ export default function ReportModal({
         photoUrl = supabase.storage.from("photos").getPublicUrl(path).data.publicUrl;
       }
 
-      const { data, error: insErr } = await supabase
-        .from("reports")
-        .insert({
-          season_id: season.id,
-          lat: fuzzCoord(effectivePos.lat),
-          lng: fuzzCoord(effectivePos.lng),
-          memo: memo.trim(),
-          photo_url: photoUrl,
-          bloom_state: bloomState,
+      const fields = {
+        season_id: season.id,
+        lat: fuzzCoord(effectivePos.lat),
+        lng: fuzzCoord(effectivePos.lng),
+        memo: memo.trim(),
+        photo_url: photoUrl,
+        bloom_state: bloomState,
+      };
+      // 사진 제보는 검수 대기로 저장돼 select로 다시 읽을 수 없어서 RPC로 만든다
+      let { data, error: insErr } = await supabase
+        .rpc("create_report", {
+          p_season_id: fields.season_id,
+          p_lat: fields.lat,
+          p_lng: fields.lng,
+          p_memo: fields.memo,
+          p_photo_url: fields.photo_url,
+          p_bloom_state: fields.bloom_state,
         })
-        .select()
-        .single();
+        .single<{ id: number; status: Report["status"]; created_at: string }>();
+      if (insErr?.code === "PGRST202") {
+        // moderation.sql을 아직 실행하지 않은 DB: 예전 방식으로 저장 (검수 없이 바로 노출)
+        ({ data, error: insErr } = await supabase
+          .from("reports")
+          .insert(fields)
+          .select("id, created_at")
+          .single());
+      }
       if (insErr || !data) throw new Error("제보 저장에 실패했어요");
-      onCreated(data);
+      onCreated({
+        ...fields,
+        ...data,
+        fresh_votes: 0,
+        faded_votes: 0,
+        likes: 0,
+        visits: 0,
+        source_url: null,
+        hidden: false,
+      });
     } catch (e) {
       setError(e instanceof Error ? e.message : "알 수 없는 오류가 났어요");
     } finally {
@@ -163,7 +187,9 @@ export default function ReportModal({
             </span>
             <span>
               <b>{file ? "사진을 바꾸려면 눌러주세요" : "사진 올리기"}</b>
-              {file ? file.name : "얼굴이 나오지 않은 풍경 사진만 올라가요"}
+              {file
+                ? "사진 제보는 확인 후 지도에 올라가요"
+                : "얼굴 없는 풍경 사진만 · 확인 후 지도에 올라가요"}
             </span>
             <input
               type="file"
