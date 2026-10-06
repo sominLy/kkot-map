@@ -10,6 +10,7 @@ import {
 } from "@/lib/events";
 import { downloadIcs } from "@/lib/ics";
 import { toast } from "@/lib/toast";
+import { track } from "@/lib/track";
 
 const YEARS = [...new Set(SEASON_EVENTS.map((e) => e.start.slice(0, 4)))];
 
@@ -69,6 +70,7 @@ export default function EventCalendar() {
                   <button
                     onClick={() => {
                       downloadIcs(e);
+                      track("calendar_add", { label: e.title });
                       toast("캘린더 파일을 받았어요. 열면 일정에 추가돼요");
                     }}
                   >
@@ -129,6 +131,7 @@ export default function EventCalendar() {
                           aria-label={`${e.title} 캘린더에 추가`}
                           onClick={() => {
                             downloadIcs(e);
+                      track("calendar_add", { label: e.title });
                             toast("캘린더 파일을 받았어요. 열면 일정에 추가돼요");
                           }}
                         >

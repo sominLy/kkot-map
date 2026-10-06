@@ -7,6 +7,7 @@ import { bumpStat, collectFlower } from "@/lib/game";
 import { dday, foliageHeadline } from "@/lib/content";
 import { applyTheme, copyFor, isFoliage, pickActiveSeason, splitMemo } from "@/lib/theme";
 import { toast } from "@/lib/toast";
+import { track } from "@/lib/track";
 import { useEscape } from "@/lib/useEscape";
 import CardModal from "./CardModal";
 import ReportModal from "./ReportModal";
@@ -81,6 +82,10 @@ export default function FlowerMap() {
   // ?spot=ID 공유 링크로 들어왔을 때 열어야 할 제보
   const pendingSpotRef = useRef<number | null>(null);
   const fittedSeasonRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    track("app_open", { label: document.referrer ? new URL(document.referrer).hostname : "direct" });
+  }, []);
 
   useEffect(() => {
     pickingRef.current = picking;
@@ -233,6 +238,7 @@ export default function FlowerMap() {
   const [locating, setLocating] = useState(false);
 
   function goToMyLocation() {
+    track("locate");
     if (!navigator.geolocation) {
       toast("이 브라우저는 위치 기능을 지원하지 않아요");
       return;
@@ -329,7 +335,10 @@ export default function FlowerMap() {
                 key={f.id}
                 className={`filter-chip glass${filter === f.id ? " on" : ""}`}
                 aria-pressed={filter === f.id}
-                onClick={() => setFilter(f.id)}
+                onClick={() => {
+                  setFilter(f.id);
+                  track("filter", { label: f.id });
+                }}
               >
                 {f.label}
               </button>
@@ -449,6 +458,7 @@ export default function FlowerMap() {
                   className={`season-chip${viewSeason?.id === s.id ? " on" : ""}`}
                   onClick={() => {
                     setViewSeason(s);
+                    track("season_switch", { label: s.flower_name });
                     setPickerOpen(false);
                     setTab("map");
                   }}
@@ -544,9 +554,11 @@ export default function FlowerMap() {
         tab={tab}
         onTab={(t) => {
           setTab(t);
+          track("tab", { label: t });
           setPicking(false);
         }}
         onReport={() => {
+          track("report_start");
           setDraftPos(null);
           setReporting(true);
         }}
