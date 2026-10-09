@@ -86,7 +86,6 @@ export default function MyPage({
     <div className="page">
       <div className="page-inner">
         <header className="page-head">
-          <p className="eyebrow">My garden</p>
           <h1>마이</h1>
           <p>제보하고 다녀올수록 칭호가 자라요.</p>
         </header>

@@ -142,7 +142,6 @@ export default function ReportModal({
       <div className="sheet" onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <div>
-            <p className="eyebrow">New report</p>
             <h2>
               {season.emoji} {season.flower_name} 제보하기
             </h2>
@@ -249,11 +248,12 @@ export default function ReportModal({
           </span>
         </p>
 
-        {error && <p className="error">{error}</p>}
-
-        <button className="btn primary" disabled={busy} onClick={submit}>
-          {busy ? "사진 확인 중…" : "제보 올리기"}
-        </button>
+        <div className="sheet-cta">
+          {error && <p className="error">{error}</p>}
+          <button className="btn primary" disabled={busy} onClick={submit}>
+            {busy ? "사진 확인 중…" : "제보 올리기"}
+          </button>
+        </div>
       </div>
     </div>
   );

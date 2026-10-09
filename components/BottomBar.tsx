@@ -27,7 +27,7 @@ export default function BottomBar({
       onClick={() => onTab(t.id)}
       aria-current={tab === t.id ? "page" : undefined}
     >
-      <Icon name={t.icon} size={22} stroke={tab === t.id ? 2.1 : 1.8} />
+      <Icon name={t.icon} size={24} stroke={tab === t.id ? 2.2 : 1.7} />
       {t.label}
     </button>
   );
@@ -35,10 +35,11 @@ export default function BottomBar({
   return (
     <nav className="tabbar glass">
       {TABS.slice(0, 2).map(button)}
-      <button className="tab-report" onClick={onReport} aria-label="제보하기">
+      <button className="tab-report" onClick={onReport}>
         <span>
-          <Icon name="plus" size={24} stroke={2.4} />
+          <Icon name="plus" size={20} stroke={2.4} />
         </span>
+        제보
       </button>
       {TABS.slice(2).map(button)}
     </nav>
