@@ -303,7 +303,7 @@ export default function FlowerMap() {
           <button className="season-banner glass" onClick={() => setPickerOpen(true)}>
             <span className="season-disc">{viewSeason?.emoji ?? "🌸"}</span>
             <span className="season-text">
-              <span className="eyebrow">{isViewingActive ? "Now · 지금 시즌" : "명소 구경 중"}</span>
+              <span className="eyebrow">{isViewingActive ? "지금 시즌" : "명소 구경 중"}</span>
               <strong>
                 {viewSeason
                   ? `${viewSeason.flower_name} ${isViewingActive ? "시즌" : "명소"}`
@@ -440,7 +440,6 @@ export default function FlowerMap() {
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
             <div className="sheet-head">
               <div>
-                <p className="eyebrow">Season</p>
                 <h2>어떤 풍경을 구경할까요?</h2>
                 <p>
                   제보는 지금 시즌({activeSeason?.emoji} {activeSeason?.flower_name})만 받아요.
@@ -465,7 +464,7 @@ export default function FlowerMap() {
                 >
                   <span>{s.emoji}</span>
                   {s.flower_name}
-                  {s.id === activeSeason?.id && <em>NOW</em>}
+                  {s.id === activeSeason?.id && <em>지금</em>}
                 </button>
               ))}
             </div>

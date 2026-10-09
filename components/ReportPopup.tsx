@@ -187,16 +187,16 @@ export default function ReportPopup({
 
         <div>
           <p className="field-label">지금 상태를 알려주세요</p>
-          <div className="segmented">
+          <div className="vote-row">
             <button
-              className={vote === "fresh" ? "on" : ""}
+              className={`vote-btn${vote === "fresh" ? " on" : ""}`}
               onClick={() => sendVote("fresh")}
               disabled={!!vote}
             >
               {copy.stateEmoji.full} {copy.freshVote}
             </button>
             <button
-              className={vote === "faded" ? "on" : ""}
+              className={`vote-btn${vote === "faded" ? " on" : ""}`}
               onClick={() => sendVote("faded")}
               disabled={!!vote}
             >

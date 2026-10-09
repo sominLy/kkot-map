@@ -66,7 +66,6 @@ export default function RankingTab({
     <div className="page">
       <div className="page-inner">
         <header className="page-head">
-          <p className="eyebrow">This week</p>
           <h1>랭킹</h1>
           <p>이번 주 제보가 몰린 동네와 사랑받은 사진이에요.</p>
         </header>

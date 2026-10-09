@@ -85,7 +85,6 @@ export default function InfoTab() {
     <div className="page">
       <div className="page-inner">
         <header className="page-head">
-          <p className="eyebrow">Season guide</p>
           <h1>꽃도감</h1>
           <p>절기와 제철, 그리고 지금 어디가 물들고 있는지.</p>
         </header>
@@ -240,7 +239,7 @@ export default function InfoTab() {
                   <span className="tl-place">
                     <span>
                       {t.name} <span className="hanja">{t.hanja}</span>
-                      {isNow && <span className="now-tag">NOW</span>}
+                      {isNow && <span className="now-tag">지금</span>}
                     </span>
                     <small>{t.desc}</small>
                   </span>
@@ -268,7 +267,7 @@ export default function InfoTab() {
               <div key={s.period} className={`guide-row${isNow ? " now" : ""}`}>
                 <div className="guide-period">
                   {s.period.replace(/\s/g, "")}
-                  {isNow && <span className="now-tag">NOW</span>}
+                  {isNow && <span className="now-tag">지금</span>}
                 </div>
                 <ul>
                   {s.flowers.map((f) => (

@@ -34,7 +34,7 @@ export default function CardModal({
     <div className="sheet-backdrop" onClick={onClose}>
       <div className="sheet card-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="card-earned">
-          <p className="eyebrow">{isNew ? "New card" : "Card"}</p>
+          <p className="eyebrow">{isNew ? "새 꽃카드" : "꽃카드"}</p>
           <h2>{isNew ? "새로운 꽃카드를 모았어요" : "꽃카드를 하나 더 모았어요"}</h2>
         </div>
         <div className="flower-card">

@@ -81,3 +81,12 @@ node seed/instagram-autumn.mjs    # → supabase/autumn-2026.sql
 - 많이 본 명소, 유입 경로, 탭·필터·시즌 전환·캘린더 추가·꽃카드 공유, 전체 누적·검수 현황
 
 행동 지표는 `analytics.sql`을 실행한 날부터 쌓여요(IP는 해시로 중복 제거에만 쓰고 저장하지 않아요).
+
+## 디자인 시스템
+
+당근 [SEED Design](https://seed-design.io) 토큰 값(`@seed-design/css` 3.0)을 기초로 써요. `app/globals.css` 맨 위 `:root`에 모여 있어요.
+
+- 색: SEED 회색 팔레트(gray-00~1000)와 semantic 이름(배경·글자·선). 브랜드 색만 시즌마다 바뀌어요(`lib/theme.ts`)
+- 간격 16px 여백(global-gutter), 반경 8·12·16·24px, 글자 크기 SEED t2~t11, 모션 150~250ms
+- 컴포넌트 규격: 버튼(ActionButton large 52px·medium 40px), 칩 36px 알약, 세그먼트 알약 트랙, 바텀시트 위 24px 둥글기·손잡이 36×4, 스낵바(아래쪽, 44px), 탭바(화면 아래 고정)
+- 그라데이션·그림자는 꽃카드와 지도 위에 뜨는 요소에만 써요

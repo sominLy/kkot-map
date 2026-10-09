@@ -71,7 +71,6 @@ export default function AdminPage() {
       <div className="page admin">
         <div className="page-inner">
           <header className="page-head">
-            <p className="eyebrow">Admin</p>
             <h1>제보 검수</h1>
           </header>
           <form
@@ -105,7 +104,6 @@ export default function AdminPage() {
     <div className="page admin">
       <div className="page-inner">
         <header className="page-head">
-          <p className="eyebrow">Admin</p>
           <h1>꽃맵 운영</h1>
           <p>사진 제보는 승인해야 지도에 올라가요. 신고 3건이 쌓인 제보는 자동으로 숨겨져요.</p>
         </header>
