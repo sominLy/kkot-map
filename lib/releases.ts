@@ -4,6 +4,7 @@
 export type Release = { date: string; title: string };
 
 export const RELEASES: Release[] = [
+  { date: "2026-10-09", title: "SEED 디자인 적용·탭바 고정·제보 버튼 고정" },
   { date: "2026-10-06", title: "사진 제보 검수·신고 자동 숨김" },
   { date: "2026-10-05", title: "사진 계정 인스타 단풍 링크 8건" },
   { date: "2026-10-03", title: "단풍 출사 추천 계정" },
